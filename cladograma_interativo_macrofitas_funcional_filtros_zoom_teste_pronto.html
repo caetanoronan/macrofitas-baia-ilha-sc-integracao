@@ -172,6 +172,15 @@ let only2005SpeciesSet = new Set();
 let only2012SpeciesSet = new Set();
 let activeTemporalMode = 'all';
 let activeFiloMode = '';
+const FALLBACK_SHARED_KEYS = `acanthophora spicifera|amphiroa beauvoisii|amphiroa fragilissima|asparagopsis taxiformis|bachelotia antillarum|bostrychia radicans|centroceras clavulatum|ceramium brasiliense|chaetomorpha antennina|chondracanthus acicularis|chondria polyrhiza|cladophora albida|cladophora prolifera|cladophora sp|cladophora vagabunda|codium decorticatum|codium taylorii|colpomenia sinuosa|dictyopteris delicatula|gelidium crinale|gymnogongrus griffithsiae|herposiphonia secunda|hincksia mitchelliae|hypnea musciformis|jania adhaerens|padina gymnospora|sargassum vulgare|spyridia filamentosa|ulva fasciata|ulva flexuosa|ulva lactuca|ulva linza`.split('|');
+const FALLBACK_ONLY2005_KEYS = `a fragilissima|a gardneri|arthrocardia flabelata|arthrocardia sp|asteronema breviarticulatus|bryopsis sp|bryothamniom seaforthii|c luetzelburgii|c sp|c teedei|c vagabunda|chaetomorpha gracilis|cianofitas|cladophoropsis membrenacea|d menstrualis|dictyota cervicornis|g floridanum|g pusillum|galaxaura marginata|gelidiella trinitatensis|gelidiopsis variabilis|jania rubens|laurencia flagellifera|laurencia obtusa|pleonosporium polystichum|s stenophylum|s tribuloides|s vulgare|sargassum filipendula|sargassum stenophylum|sphacelaria brachygonia|ulva lingulata`.split('|');
+const FALLBACK_ONLY2012_KEYS = `acetabularia calyculus|acrochaetium globosum|acrochaetium microscopicum|acrochaetium sp|aglaothamnion felipponei|aglaothamnion uruguayense|anotrichium yagii|arthrocardia variabilis|asterocladon rhodochortonoides|asteronema breviarticulatum|bangia fuscopurpurea|blidingia marginata|bostrychia moritziana|bostrychia tenella|bryocladia thyrsigera|bryopsis hypnoides|bryopsis pennata|bryopsis plumosa|bryothamnion seaforthii|callithamnion tetragonum|caloglossa leprieurii|canistrocarpus cervicornis|caulerpa fastigiata|ceramium dawsonii|ceramium deslongchampsii|ceramium tenerrimum|ceratodictyon variabile|chaetomorpha aerea|champia parvula|chnoospora minima|chondracanthus saundersii|chondracanthus teedei|cladophora catenata|cladophora coelothrix|cladophora corallicola|cladophora crispata|cladophoropsis membranacea|codium intertextum|codium isthmocladum|colaconema codico la|corallina officinalis|cryptopleura ramosa|dasya rigidula|dictyota ciliolata|dictyota menstrualis|dictyota sp|dipterosiphonia dendr itica|dipterosiphonia rigens|ectocarpus sp|erythrotrichia carnea|feldmannia irregularis|gayralia oxysperma|gelidium flori danum|gelidium pusillum|gelidium sp 1|gelidium sp2|gracilaria domingensis|gracilaria sp|gracilaria tepocensis|grateloupia cuneifolia|halodule wrightii|halymenia floridana|halymenia sp 1|halymenia sp 2|herposiphonia tenella|heterosiphonia crispella|hildenbrandia rubra|hincksia sp|hydropuntia caudata|hypnea cenomyce|hypnea cervicornis|hypnea nigrescens|hypnea sp|hypnea spinella|jania capillacea|jania crassa|jania sagittata|jania sp 1|jania sp 2|laurencia catarinens is|laurencia dendroidea|laurencia sp|levringia brasiliensis|nemalion helminthoides|neoralfsia expansa|neosiphon ia tepida|neosiphonia ferulace a|neosiphonia flaccidissima|neosiphonia howei|neosiphonia sphaerocarpa|ophidocladus simpliciusculus|padina sp|palisada flagellifera|petalonia fascia|petalonia sp|plocamium brasiliense|polysiphonia scopulorum|polysiphonia sertularioides|polysiphonia stricta|polysiphonia subtilissima|pterocladiella capillacea|pterosiphoni a pennata|pterosiphonia parasitica|pterosiphonia parasitica var australis|ptilothamnion speluncarum|pyropia acanthophora|pyropia sp|pyropia sp iralis|rhizoclonium africanum|rhizoclonium riparium|rhodymenia pseudopalmata|rosenvingea orientalis|ruppia maritima|sahlingia subintegra|saragassum filipendula|sargassum cymosum|sargassum cymosum var nanum|sargassum furcatum|sargassum sp|sargassum stenophyllum|sargassum vulgare var foliosissimum|scytosiphon lomentaria|sphacelaria brachygona|sphacelaria rigidula|sphacelaria sp|sphacelaria tribuloides|spyridi a hypnoides|stylonema alsidii|ulva chaetomorphoides|ulva clathrata|ulva prolifera|ulva rigida`.split('|');
+
+function aplicarCuradoriaTemporalFallback() {
+    sharedSpeciesSet = new Set(FALLBACK_SHARED_KEYS.filter(Boolean));
+    only2005SpeciesSet = new Set(FALLBACK_ONLY2005_KEYS.filter(Boolean));
+    only2012SpeciesSet = new Set(FALLBACK_ONLY2012_KEYS.filter(Boolean));
+}
 
 function getSpeciesStatus(speciesName) {
     const key = normalizeTaxonKey(speciesName);
@@ -482,6 +491,12 @@ async function carregarDadosIntegrados() {
         aplicarCuradoriaTemporal(dadosMapa);
     } catch (err) {
         console.warn('Falha ao carregar pontos_mapa.json para curadoria temporal.', err);
+    }
+
+    const totalCuradoria = sharedSpeciesSet.size + only2005SpeciesSet.size + only2012SpeciesSet.size;
+    if (totalCuradoria === 0) {
+        console.warn('Curadoria temporal via fallback embutido (sem fetch de pontos_mapa.json).');
+        aplicarCuradoriaTemporalFallback();
     }
 }
 
