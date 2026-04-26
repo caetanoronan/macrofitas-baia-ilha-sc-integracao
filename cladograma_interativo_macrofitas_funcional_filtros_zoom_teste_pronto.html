@@ -226,7 +226,7 @@ function montarBotoesFiltro() {
     btnsDiv.append('button')
         .attr('class', 'filter-btn')
         .attr('id', 'reset-btn')
-        .text('Mostrar todas');
+        .text('Mostrar todos (filos)');
 
     btnsDiv.selectAll('.filter-btn').on('click', function() {
         btnsDiv.selectAll('.filter-btn').classed('active', false);
@@ -240,10 +240,17 @@ function montarBotoesFiltro() {
         btnsDiv.selectAll('.filter-btn').classed('active', false);
         d3.select(this).classed('active', true);
         activeFiloMode = '';
+        setTemporalMode('all');
         applyAllFiltersAndRender();
     });
 
     d3.select('#reset-btn').classed('active', true);
+}
+
+function setTemporalMode(mode) {
+    activeTemporalMode = mode || 'all';
+    temporalBtnsDiv.selectAll('.temporal-btn').classed('active', false);
+    temporalBtnsDiv.select(`[data-mode="${activeTemporalMode}"]`).classed('active', true);
 }
 
 function montarBotoesTemporais() {
@@ -263,13 +270,11 @@ function montarBotoesTemporais() {
     });
 
     temporalBtnsDiv.selectAll('.temporal-btn').on('click', function() {
-        temporalBtnsDiv.selectAll('.temporal-btn').classed('active', false);
-        d3.select(this).classed('active', true);
-        activeTemporalMode = d3.select(this).attr('data-mode') || 'all';
+        setTemporalMode(d3.select(this).attr('data-mode') || 'all');
         applyAllFiltersAndRender();
     });
 
-    temporalBtnsDiv.select('[data-mode=\"all\"]').classed('active', true);
+    setTemporalMode('all');
 }
 
 // --- FUNÇÕES DE ESTATÍSTICAS ---
