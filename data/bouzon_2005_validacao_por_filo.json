@@ -1,0 +1,23 @@
+{
+  "fonte": "C:\\Users\\caetanoronan\\OneDrive - UFSC\\Área de Trabalho\\Macrofitas_baia_ilha_sc\\Buzon\\Lista_completa_macroalgas.txt",
+  "esperado": {
+    "Chlorophyta": 26,
+    "Phaeophyceae": 20,
+    "Rhodophyta": 60,
+    "TOTAL": 107
+  },
+  "obtido": {
+    "Chlorophyta": 26,
+    "Phaeophyceae": 20,
+    "Rhodophyta": 60,
+    "Nao_informado": 1,
+    "TOTAL": 107,
+    "TOTAL_SEM_PLACEHOLDER": 106
+  },
+  "diferencas": {
+    "Chlorophyta": 0,
+    "Phaeophyceae": 0,
+    "Rhodophyta": 0,
+    "TOTAL": 0
+  }
+}
