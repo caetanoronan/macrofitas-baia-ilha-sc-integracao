@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa de Distribuição de Macrófitas Marinhas das Baias Ilha de Santa Catarina - Estações de Estudo</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-color: #f5f5f5;
+            --text-color: #1a1a1a;
+            --border-color: #d0d0d0;
+            --card-bg: #ffffff;
+            --accent-color: #0066cc;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        .dark-mode {
+            --bg-color: #1a1a1a;
+            --text-color: #e9ecef;
+            --border-color: #495057;
+            --card-bg: #2d3748;
+            --accent-color: #4dabf7;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        body {
+            font-family: 'Roboto', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: var(--bg-color);
+            color: var(--text-color);
+            transition: all 0.3s ease;
+            padding: 0;
+            margin: 0;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1fr;
+            height: 100vh;
+            gap: 0;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            z-index: 1;
+        }
+
+        .map-panel {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        .map-title {
+            position: absolute;
+            top: 14px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1200;
+            background: rgba(255, 255, 255, 0.92);
+            color: #1a1a1a;
+            border: 1px solid #d0d0d0;
+            border-radius: 10px;
+            padding: 12px 18px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+            max-width: 620px;
+            width: min(92%, 620px);
+            text-align: center;
+        }
+
+        .map-title h1 {
+            font-size: 22px;
+            margin: 0;
+            line-height: 1.2;
+        }
+
+        .map-title p {
+            font-size: 13px;
+            margin: 4px 0 0;
+            color: #5f6368;
+        }
+
+        .compass-rose {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            z-index: 1200;
+            width: 86px;
+            height: 86px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid #d0d0d0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .compass-rose svg {
+            width: 74px;
+            height: 74px;
+        }
+
+        .dark-mode .map-title,
+        .dark-mode .compass-rose {
+            background: rgba(36, 40, 48, 0.92);
+            border-color: #495057;
+            color: #e9ecef;
+        }
+
+        .dark-mode .map-title p {
+            color: #adb5bd;
+        }
+
+        .map-legend {
+            position: absolute;
+            right: 12px;
+            bottom: 12px;
+            z-index: 1200;
+            background: rgba(255, 255, 255, 0.92);
+            border: 1px solid #d0d0d0;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+            padding: 10px 12px;
+            font-size: 11px;
+            min-width: 140px;
+        }
+
+        .map-legend .legend-title {
+            margin: 0 0 8px;
+            font-size: 12px;
+            color: #1f2937;
+            font-weight: 700;
+        }
+
+        .map-legend .legend-item {
+            margin: 5px 0;
+        }
+
+        .map-footer-meta {
+            position: absolute;
+            left: 50%;
+            bottom: 10px;
+            transform: translateX(-50%);
+            z-index: 1200;
+            background: rgba(255, 255, 255, 0.92);
+            border: 1px solid #d0d0d0;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+            padding: 8px 12px;
+            font-size: 11px;
+            line-height: 1.35;
+            max-width: min(90vw, 620px);
+        }
+
+        .map-footer-meta strong {
+            color: #1f2937;
+        }
+
+        .dark-mode .map-legend {
+            background: rgba(36, 40, 48, 0.92);
+            border-color: #495057;
+            color: #e9ecef;
+        }
+
+        .dark-mode .map-legend .legend-title {
+            color: #e9ecef;
+        }
+
+        .dark-mode .map-footer-meta {
+            background: rgba(36, 40, 48, 0.92);
+            border-color: #495057;
+            color: #e9ecef;
+        }
+
+        .dark-mode .map-footer-meta strong {
+            color: #e9ecef;
+        }
+
+        .leaflet-control-container {
+            z-index: 10;
+        }
+
+        .leaflet-top.leaflet-left .leaflet-control-layers {
+            margin-top: 56px;
+        }
+
+        .leaflet-control-layers-expanded {
+            min-width: 210px;
+            background: rgba(255, 255, 255, 0.94);
+            border: 1px solid #d0d0d0;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+            font-size: 12px;
+            line-height: 1.35;
+        }
+
+        .leaflet-control-layers-base label,
+        .leaflet-control-layers-overlays label {
+            margin: 4px 0;
+        }
+
+        .dark-mode .leaflet-control-layers-expanded {
+            background: rgba(36, 40, 48, 0.94);
+            border-color: #495057;
+            color: #e9ecef;
+        }
+
+        .sidebar {
+            display: none !important;
+            background: var(--card-bg);
+            border-left: 2px solid var(--border-color);
+            overflow-y: auto;
+            flex-direction: column;
+            box-shadow: -4px 0 12px var(--shadow);
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 2px solid var(--border-color);
+            background: linear-gradient(135deg, var(--accent-color), rgba(0, 102, 204, 0.7));
+            color: white;
+            position: sticky;
+            top: 0;
+        }
+
+        .sidebar-header h2 {
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+
+        .sidebar-header p {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .stats-container {
+            padding: 15px;
+            background: rgba(0, 102, 204, 0.05);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .stat-box {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .stat-item {
+            padding: 10px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            text-align: center;
+            font-size: 11px;
+        }
+
+        .stat-value {
+            font-weight: 700;
+            color: var(--accent-color);
+            font-size: 18px;
+        }
+
+        .station-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .station-item {
+            padding: 14px;
+            margin: 8px 0;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 4px solid var(--accent-color);
+        }
+
+        .station-item:hover {
+            background: rgba(0, 102, 204, 0.05);
+            border-left-color: #ff6400;
+            transform: translateX(5px);
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .station-item.selected {
+            background: rgba(0, 102, 204, 0.15);
+            border-left-color: #ff6400;
+            border: 2px solid var(--accent-color);
+        }
+
+        .station-name {
+            font-weight: 700;
+            font-size: 15px;
+            margin-bottom: 5px;
+            color: var(--accent-color);
+        }
+
+        .station-code {
+            font-size: 13px;
+            color: #666;
+            opacity: 0.8;
+        }
+
+        .dark-mode .station-code {
+            color: #aaa;
+        }
+
+        .station-riqueza {
+            font-size: 14px;
+            font-weight: 700;
+            color: #00aa00;
+            margin-top: 5px;
+        }
+
+        .legend {
+            padding: 15px;
+            background: rgba(0, 102, 204, 0.05);
+            border-top: 1px solid var(--border-color);
+            font-size: 11px;
+        }
+
+        .legend-title {
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: var(--accent-color);
+            font-size: 12px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 6px 0;
+        }
+
+        .legend-circle {
+            border-radius: 50%;
+            background: #0066cc;
+            border: 2px solid #003d7a;
+            flex-shrink: 0;
+        }
+
+        .controls {
+            padding: 15px;
+            border-top: 1px solid var(--border-color);
+            background: var(--card-bg);
+        }
+
+        .footer-meta {
+            padding: 12px 15px 18px;
+            border-top: 1px solid var(--border-color);
+            background: rgba(0, 102, 204, 0.04);
+            font-size: 11px;
+            line-height: 1.45;
+        }
+
+        .footer-meta h4 {
+            font-size: 12px;
+            color: var(--accent-color);
+            margin: 0 0 6px;
+        }
+
+        .footer-meta p {
+            margin: 0 0 8px;
+        }
+
+        .footer-meta ul {
+            margin: 0;
+            padding-left: 16px;
+        }
+
+        .footer-meta li {
+            margin: 3px 0;
+        }
+
+        .scale-ratio {
+            background: rgba(255, 255, 255, 0.92);
+            border: 1px solid #d0d0d0;
+            border-radius: 6px;
+            padding: 6px 10px;
+            font-size: 11px;
+            color: #1f2937;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+            line-height: 1.25;
+        }
+
+        .scale-ratio strong {
+            font-size: 12px;
+        }
+
+        .dark-mode .scale-ratio {
+            background: rgba(36, 40, 48, 0.92);
+            border-color: #495057;
+            color: #e9ecef;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            background: #004fa3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px var(--shadow);
+        }
+
+        .popup-content {
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .popup-title {
+            font-weight: 700;
+            color: #0066cc;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        .popup-content p {
+            margin: 3px 0;
+        }
+
+        @media (max-width: 1024px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+
+            .map-title {
+                max-width: 92%;
+                padding: 10px 12px;
+            }
+
+            .map-title h1 {
+                font-size: 18px;
+            }
+
+            .map-title p {
+                font-size: 12px;
+            }
+
+            .sidebar {
+                position: absolute;
+                right: 0;
+                top: 0;
+                width: 340px;
+                height: 100vh;
+                z-index: 1000;
+                border-left: none;
+                box-shadow: -4px 0 12px var(--shadow);
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="map-panel">
+        <div class="map-title">
+            <h1>Mapa de Distribuição de Macrófitas Marinhas das Baias Ilha de Santa Catarina - Estações de Estudo</h1>
+            <p>Dados integrados Bouzon (2005) + Batista (2012)</p>
+        </div>
+
+        <div class="compass-rose" aria-label="Rosa dos ventos">
+            <svg viewBox="0 0 100 100" role="img" aria-hidden="true">
+                <circle cx="50" cy="50" r="45" fill="none" stroke="#6c757d" stroke-width="2" />
+                <polygon points="50,7 56,44 50,38 44,44" fill="#d62828" />
+                <polygon points="50,93 56,56 50,62 44,56" fill="#6c757d" />
+                <polygon points="7,50 44,56 38,50 44,44" fill="#6c757d" />
+                <polygon points="93,50 56,56 62,50 56,44" fill="#6c757d" />
+                <circle cx="50" cy="50" r="4" fill="#343a40" />
+                <text x="50" y="18" text-anchor="middle" font-size="12" font-weight="700" fill="#d62828">N</text>
+                <text x="50" y="96" text-anchor="middle" font-size="10" fill="#343a40">S</text>
+                <text x="10" y="54" text-anchor="middle" font-size="10" fill="#343a40">W</text>
+                <text x="90" y="54" text-anchor="middle" font-size="10" fill="#343a40">E</text>
+            </svg>
+        </div>
+
+        <div class="map-legend">
+            <div class="legend-title">🔵 Tamanho (Riqueza)</div>
+            <div class="legend-item">
+                <div class="legend-circle" style="width: 10px; height: 10px; background: #90EE90;"></div>
+                <span>&lt; 30 spp</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-circle" style="width: 16px; height: 16px; background: #FFD700;"></div>
+                <span>30-45 spp</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-circle" style="width: 22px; height: 22px; background: #FF8C00;"></div>
+                <span>45-60 spp</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-circle" style="width: 28px; height: 28px; background: #FF0000;"></div>
+                <span>&gt; 60 spp</span>
+            </div>
+            <div class="legend-title" style="margin-top:10px;">Comparação Temporal (6 pontos)</div>
+            <div class="legend-item">
+                <div class="legend-circle" style="width: 12px; height: 12px; background: transparent; border: 2px solid #1d4ed8;"></div>
+                <span>2005 (Bouzon)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-circle" style="width: 12px; height: 12px; background: transparent; border: 2px solid #16a34a;"></div>
+                <span>2012 (Batista)</span>
+            </div>
+        </div>
+
+        <div class="map-footer-meta">
+            <strong>Autor:</strong> Ronan Armando Caetano |
+            <strong>Referências:</strong> Bouzon, Janayna Lehmkuhl (2005) + Batista, Manuela B. (2012). Base cartográfica: OpenStreetMap Contributors. Visualização web: Leaflet 1.9.4 (CDNJS).
+        </div>
+
+        <div id="map"></div>
+    </div>
+    
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h2>🗺️ Macrófitas SC</h2>
+            <p>Distribuição nas estações de coleta</p>
+        </div>
+
+        <div class="stats-container">
+            <div class="stat-box">
+                <div class="stat-item">
+                    <div class="stat-value" id="totalSpecies">196</div>
+                    <div style="font-size: 10px;">Espécies</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="totalStations">33</div>
+                    <div style="font-size: 10px;">Estações</div>
+                </div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-item">
+                    <div class="stat-value" id="avgRichness">0</div>
+                    <div style="font-size: 10px;">Média</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="maxRichness">0</div>
+                    <div style="font-size: 10px;">Máxima</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="station-list" id="stationList"></div>
+
+        <div class="controls">
+            <button class="btn" onclick="resetView()">🔄 Resetar</button>
+            <button class="btn" onclick="toggleDarkMode()">🌙 Escuro</button>
+            <button class="btn" onclick="goToPortal()">← Voltar</button>
+        </div>
+
+        <div class="footer-meta">
+            <h4>Autor</h4>
+            <p>Ronan Armando Caetano</p>
+
+            <h4>Referências</h4>
+            <ul>
+                <li>Bouzon, Janayna Lehmkuhl (2005) + Batista, Manuela B. (2012).</li>
+                <li>Base cartográfica: OpenStreetMap Contributors.</li>
+                <li>Visualização web: Leaflet 1.9.4 (CDNJS).</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Leaflet JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+
+<script>
+let map;
+let markers = [];
+let circles = [];
+let selectedStation = null;
+let ratioScaleEl = null;
+let STATIONS = {};
+let INTERSECTION_PAIRS = [];
+let layerStations2005 = null;
+let layerStations2012 = null;
+let layerTemporalComparison = null;
+let baseLayerOpenStreetMap = null;
+let baseLayerSatelite = null;
+
+const INTERSECAO_SEIS_PONTOS = new Set([
+    'PONTA_DAS_CANAS',
+    'SAMBAQUI',
+    'SACO_DOS_LIMOES',
+    'PONTA_DO_CORAL',
+    'RIBEIRAO_DA_ILHA',
+    'CAIEIRA_DA_BARRA_DO_SUL'
+]);
+
+function normalizeKey(value) {
+    return String(value || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toUpperCase()
+        .replace(/[^A-Z0-9]+/g, '_')
+        .replace(/^_+|_+$/g, '');
+}
+
+function normalizeTaxon(value) {
+    const raw = String(value || '').trim();
+    if (!raw) return '';
+    if (/^E\.\s+/i.test(raw)) return `Ulva ${raw.replace(/^E\.\s+/i, '').trim()}`;
+    if (/^Enteromorpha\s+/i.test(raw)) return `Ulva ${raw.replace(/^Enteromorpha\s+/i, '').trim()}`;
+    return raw;
+}
+
+function inferAno(item) {
+    const explicit = Number(item.ano);
+    if (explicit === 2005 || explicit === 2012) return explicit;
+    const sigla = String(item.sigla || '');
+    const m = sigla.match(/(2005|2012)$/);
+    return m ? Number(m[1]) : null;
+}
+
+// Coordenadas centrais da Ilha de Santa Catarina
+const ISLAND_CENTER = [-27.4667, -48.4333];
+const MIN_ZOOM = 10;
+const MAX_ZOOM = 16;
+const ISLAND_BOUNDS = [
+    [-27.92, -48.72],
+    [-27.20, -48.15]
+];
+
+function classificarSetor(lat) {
+    if (lat <= -27.72) return 'Sul';
+    if (lat <= -27.57) return 'Leste';
+    if (lat <= -27.45) return 'Norte';
+    return 'Oeste';
+}
+
+function classificarEnergia(riqueza) {
+    if (riqueza >= 50) return 'alta';
+    if (riqueza >= 30) return 'média';
+    return 'baixa';
+}
+
+function construirStations(dados) {
+    const out = {};
+    const pares = {};
+
+    for (const item of dados) {
+        const code = (item.sigla || '').toUpperCase();
+        if (!code) continue;
+        const lat = Number(item.latitude);
+        const lng = Number(item.longitude);
+        if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue;
+        const riqueza = Number(item.riqueza_taxons || 0);
+        const ano = inferAno(item);
+        const estacaoPadrao = normalizeKey(item.estacao_padrao || '');
+        const listaEspecies = Array.isArray(item.lista_qualitativa_algas)
+            ? item.lista_qualitativa_algas.map(normalizeTaxon).filter(Boolean)
+            : [];
+
+        out[code] = {
+            nome: item.descricao_local || item.localizacao || code,
+            lat,
+            lng,
+            setor: classificarSetor(lat),
+            energia: classificarEnergia(riqueza),
+            especies: riqueza,
+            biomassa: Number(item.biomassa_media_gm2 || 0),
+            principais: Array.isArray(item.principais_algas) ? item.principais_algas : [],
+            ano,
+            estudo: item.estudo || '',
+            estacaoPadrao,
+            listaEspecies
+        };
+
+        if (INTERSECAO_SEIS_PONTOS.has(estacaoPadrao) && (ano === 2005 || ano === 2012)) {
+            if (!pares[estacaoPadrao]) pares[estacaoPadrao] = {};
+            pares[estacaoPadrao][ano] = out[code];
+        }
+    }
+
+    INTERSECTION_PAIRS = Object.entries(pares)
+        .filter(([, anoMap]) => anoMap[2005] && anoMap[2012])
+        .map(([padrao, anoMap]) => ({
+            estacaoPadrao: padrao,
+            y2005: anoMap[2005],
+            y2012: anoMap[2012]
+        }));
+
+    return out;
+}
+
+function getStationLayerGroup(station) {
+    const ano = Number(station?.ano || 0);
+    if (ano === 2005) return layerStations2005;
+    if (ano === 2012) return layerStations2012;
+    return layerStations2012;
+}
+
+function adicionarControleCamadas() {
+    const baseMaps = {
+        'OpenStreetMap': baseLayerOpenStreetMap,
+        'Satelite': baseLayerSatelite
+    };
+
+    const overlayMaps = {
+        'Bouzon (2005)': layerStations2005,
+        'Batista (2012)': layerStations2012,
+        'Comparacao Temporal (6 pontos)': layerTemporalComparison
+    };
+
+    L.control.layers(baseMaps, overlayMaps, {
+        position: 'topleft',
+        collapsed: true
+    }).addTo(map);
+}
+
+// Inicializar mapa
+function initMap() {
+    console.log('🚀 Inicializando Leaflet Map...');
+    
+    map = L.map('map', {
+        minZoom: MIN_ZOOM,
+        maxZoom: MAX_ZOOM,
+        maxBounds: ISLAND_BOUNDS,
+        maxBoundsViscosity: 0.9
+    }).setView(ISLAND_CENTER, 11);
+    
+    // Camadas base
+    baseLayerOpenStreetMap = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap contributors'
+    });
+
+    baseLayerSatelite = L.tileLayer(
+        'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+        {
+            maxZoom: 19,
+            attribution: 'Tiles © Esri'
+        }
+    );
+
+    baseLayerOpenStreetMap.addTo(map);
+
+    // Camadas tematicas
+    layerStations2005 = L.layerGroup().addTo(map);
+    layerStations2012 = L.layerGroup().addTo(map);
+    layerTemporalComparison = L.layerGroup().addTo(map);
+
+    // Escala grafica (barra em m/km)
+    L.control.scale({
+        position: 'bottomleft',
+        metric: true,
+        imperial: false,
+        maxWidth: 140
+    }).addTo(map);
+
+    // Escala numerica aproximada (1:N)
+    const RatioScaleControl = L.Control.extend({
+        options: { position: 'bottomleft' },
+        onAdd: function () {
+            ratioScaleEl = L.DomUtil.create('div', 'scale-ratio');
+            ratioScaleEl.innerHTML = '<strong>Escala numérica</strong><br>1 : -';
+            return ratioScaleEl;
+        }
+    });
+    map.addControl(new RatioScaleControl());
+
+    // Adicionar marcadores para cada estação
+    Object.entries(STATIONS).forEach(([code, station]) => {
+        addMarker(code, station);
+    });
+    addIntersectionOverlays();
+    adicionarControleCamadas();
+
+    updateStatistics();
+    populateStationList();
+    updateScaleRatio();
+    map.on('zoomend moveend', updateScaleRatio);
+    console.log('✅ Mapa inicializado com sucesso!');
+}
+
+function addIntersectionOverlays() {
+    for (const pair of INTERSECTION_PAIRS) {
+        const p2005 = pair.y2005;
+        const p2012 = pair.y2012;
+        const lat = (Number(p2005.lat) + Number(p2012.lat)) / 2;
+        const lng = (Number(p2005.lng) + Number(p2012.lng)) / 2;
+        if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue;
+
+        const r2005 = Math.max(8, Math.min(24, 5 + (p2005.especies / 8)));
+        const r2012 = Math.max(7, Math.min(22, 5 + (p2012.especies / 8)));
+        const delta = p2012.especies - p2005.especies;
+        const deltaColor = delta >= 0 ? '#16a34a' : '#dc2626';
+
+        const popupContent = `
+            <div class="popup-content">
+                <div class="popup-title">📍 ${pair.estacaoPadrao.replaceAll('_', ' ')}</div>
+                <p><strong>Comparação temporal (6 pontos coincidentes)</strong></p>
+                <p><strong>Riqueza 2005:</strong> ${p2005.especies} spp</p>
+                <p><strong>Riqueza 2012:</strong> ${p2012.especies} spp</p>
+                <p><strong>Δ 2012-2005:</strong> <span style="color:${deltaColor};font-weight:700">${delta >= 0 ? '+' : ''}${delta}</span></p>
+            </div>
+        `;
+
+        const ring2005 = L.circleMarker([lat, lng], {
+            radius: r2005,
+            color: '#1d4ed8',
+            weight: 2,
+            fillColor: '#1d4ed8',
+            fillOpacity: 0.08
+        }).addTo(layerTemporalComparison);
+
+        const ring2012 = L.circleMarker([lat, lng], {
+            radius: r2012,
+            color: '#16a34a',
+            weight: 2,
+            fillColor: '#16a34a',
+            fillOpacity: 0.14
+        }).addTo(layerTemporalComparison);
+
+        ring2005.bindPopup(popupContent);
+        ring2012.bindPopup(popupContent);
+
+        markers.push(ring2005);
+        markers.push(ring2012);
+    }
+}
+
+function updateScaleRatio() {
+    if (!map || !ratioScaleEl) return;
+
+    const lat = map.getCenter().lat;
+    const zoom = map.getZoom();
+    const metersPerPixel = 156543.03392 * Math.cos((lat * Math.PI) / 180) / Math.pow(2, zoom);
+    const screenPixelMeters = 0.000264583;
+    const denominator = Math.max(1, Math.round(metersPerPixel / screenPixelMeters));
+
+    ratioScaleEl.innerHTML = `<strong>Escala numérica</strong><br>1 : ${denominator.toLocaleString('pt-BR')}`;
+}
+
+// Obter cor baseada em riqueza
+function getColorFromRichness(richness) {
+    if (richness < 30) return '#90EE90'; // Verde claro
+    if (richness < 45) return '#FFD700'; // Amarelo
+    if (richness < 60) return '#FF8C00'; // Laranja
+    return '#FF0000'; // Vermelho
+}
+
+// Obter raio baseado em riqueza
+function getRadiusFromRichness(richness) {
+    if (richness < 30) return 120;
+    if (richness < 45) return 180;
+    if (richness < 60) return 260;
+    return 340;
+}
+
+// Adicionar marcador no mapa
+function addMarker(code, station) {
+    const color = getColorFromRichness(station.especies);
+    const radius = getRadiusFromRichness(station.especies);
+    const targetLayer = getStationLayerGroup(station);
+    
+    // Criar círculo para visualizar riqueza
+    const circle = L.circle([station.lat, station.lng], {
+        color: color,
+        fillColor: color,
+        fillOpacity: 0.4,
+        weight: 2,
+        radius: radius
+    }).addTo(targetLayer);
+
+    // Criar marcador com popup
+    const marker = L.circleMarker([station.lat, station.lng], {
+        radius: Math.max(6, Math.min(16, 4 + (station.especies / 6))),
+        fillColor: color,
+        color: '#333',
+        weight: 2,
+        opacity: 1,
+        fillOpacity: 0.8
+    }).addTo(targetLayer);
+
+    // Popup content
+    const popupContent = `
+        <div class="popup-content">
+            <div class="popup-title">📍 ${station.nome}</div>
+            <p><strong>Código:</strong> ${code}</p>
+            <p><strong>Ano:</strong> ${station.ano || '-'}</p>
+            <p><strong>Estudo:</strong> ${station.estudo || '-'}</p>
+            <p><strong>Setor:</strong> ${station.setor}</p>
+            <p><strong>Energia:</strong> ${station.energia.toUpperCase()}</p>
+            <p><strong>Biomassa média:</strong> ${station.biomassa.toFixed(1)} g/m2</p>
+            <p style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #ddd;">
+                <strong style="color: #0066cc;">🧬 ${station.especies} espécies</strong>
+            </p>
+        </div>
+    `;
+
+    marker.bindPopup(popupContent);
+    
+    marker.on('click', function() {
+        selectStation(code);
+    });
+
+    circle.on('click', function() {
+        marker.openPopup();
+        selectStation(code);
+    });
+
+    markers.push(marker);
+    circles.push(circle);
+}
+
+// Selecionar estação
+function selectStation(code) {
+    selectedStation = code;
+    document.querySelectorAll('.station-item').forEach(el => {
+        el.classList.remove('selected');
+    });
+    const selected = document.querySelector(`[data-station="${code}"]`);
+    if (selected) {
+        selected.classList.add('selected');
+        selected.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+}
+
+// Popular lista de estações
+function populateStationList() {
+    const list = document.getElementById('stationList');
+    const sortedStations = Object.entries(STATIONS)
+        .sort((a, b) => {
+            const anoA = Number(a[1].ano || 0);
+            const anoB = Number(b[1].ano || 0);
+            if (anoA !== anoB) return anoA - anoB;
+            return b[1].especies - a[1].especies;
+        });
+
+    sortedStations.forEach(([code, station]) => {
+        const item = document.createElement('div');
+        item.className = 'station-item';
+        item.setAttribute('data-station', code);
+        item.innerHTML = `
+            <div class="station-name">${code}: ${station.nome}</div>
+            <div class="station-code">${station.ano || '-'} • ${station.setor} • ${station.energia}</div>
+            <div class="station-riqueza">🧬 ${station.especies} espécies</div>
+        `;
+        item.addEventListener('click', () => {
+            selectStation(code);
+            map.setView([station.lat, station.lng], 13);
+        });
+        list.appendChild(item);
+    });
+}
+
+// Atualizar estatísticas
+function updateStatistics() {
+    const lista = Object.values(STATIONS);
+    if (!lista.length) return;
+    const valores = lista.map(s => s.especies);
+    const media = Math.round(valores.reduce((a, b) => a + b, 0) / valores.length);
+    const max = Math.max(...valores);
+    const speciesSet = new Set();
+    for (const station of lista) {
+        for (const taxon of (station.listaEspecies || [])) {
+            speciesSet.add(normalizeTaxon(taxon).toLowerCase());
+        }
+    }
+    const totalSpecies = speciesSet.size;
+
+    document.getElementById('avgRichness').textContent = media;
+    document.getElementById('maxRichness').textContent = max;
+    document.getElementById('totalStations').textContent = lista.length;
+    document.getElementById('totalSpecies').textContent = totalSpecies;
+}
+
+// Resetar visualização
+function resetView() {
+    map.setView(ISLAND_CENTER, 11);
+    map.fitBounds(ISLAND_BOUNDS);
+    selectedStation = null;
+    document.querySelectorAll('.station-item').forEach(el => {
+        el.classList.remove('selected');
+    });
+}
+
+// Modo escuro
+function toggleDarkMode() {
+    document.body.classList.toggle('dark-mode');
+}
+
+// Voltar ao portal
+function goToPortal() {
+    location.href = 'index.html';
+}
+
+async function carregarDadosIntegrados() {
+    const resp = await fetch('data/pontos_mapa.json');
+    const dados = await resp.json();
+    STATIONS = construirStations(Array.isArray(dados) ? dados : []);
+}
+
+// Inicializar quando página carregar
+window.addEventListener('DOMContentLoaded', async () => {
+    console.log('📖 Página carregada, inicializando mapa...');
+    try {
+        await carregarDadosIntegrados();
+    } catch (err) {
+        console.error('Falha ao carregar data/pontos_mapa.json', err);
+        alert('Falha ao carregar dados do mapa em data/pontos_mapa.json');
+    }
+    initMap();
+});
+</script>
+
+</body>
+</html>

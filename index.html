@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal de Visualizações: Macrófitas Marinhas das Baias da Ilha de Santa Catarina</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #0066cc;
+            --success: #2a9d8f;
+            --warning: #f1a208;
+            --danger: #e63946;
+            --bg: #f5f5f5;
+            --text: #1a1a1a;
+            --text-soft: #334155;
+            --text-muted: #4b5563;
+            --card: #ffffff;
+            --border: #d0d0d0;
+            --shadow: rgba(0, 0, 0, 0.1);
+            --header-bg: rgba(255,255,255,0.95);
+            --stats-bg: rgba(255,255,255,0.95);
+            --feature-text: #3f3f46;
+            --footer-text: rgba(255, 255, 255, 0.9);
+            --footer-border: rgba(255, 255, 255, 0.35);
+        }
+
+        .dark-mode {
+            --bg: #1a1a1a;
+            --text: #e9ecef;
+            --text-soft: #dbe4ee;
+            --text-muted: #c8d3df;
+            --card: #2d3748;
+            --border: #5e6a78;
+            --shadow: rgba(0, 0, 0, 0.3);
+            --header-bg: rgba(26, 33, 44, 0.94);
+            --stats-bg: rgba(26, 33, 44, 0.94);
+            --feature-text: #d0d8e2;
+            --footer-text: rgba(233, 236, 239, 0.95);
+            --footer-border: rgba(233, 236, 239, 0.35);
+        }
+
+        html, body {
+            height: 100%;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: var(--text);
+            transition: all 0.3s ease;
+            min-height: 100vh;
+            padding: 0;
+        }
+
+        body.dark-mode {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+        }
+
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 40px 20px 20px 20px;
+        }
+
+        header {
+            text-align: center;
+            color: var(--text);
+            margin-bottom: 40px;
+            background: var(--header-bg);
+            border-radius: 16px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+            padding: 32px 10px 18px 10px;
+            border: 1px solid var(--border);
+            text-shadow: none;
+        }
+
+        h1 {
+            font-size: 40px;
+            margin-bottom: 8px;
+            font-weight: 800;
+        }
+
+        .subtitle {
+            font-size: 19px;
+            opacity: 1;
+            color: #1f7a4d;
+            font-weight: 600;
+        }
+
+        .intro-text {
+            max-width: 700px;
+            margin: 18px auto 0 auto;
+            font-size: 17px;
+            color: var(--text-soft);
+            line-height: 1.7;
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 18px;
+            box-shadow: 0 2px 8px var(--shadow);
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+
+        .theme-toggle:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px var(--shadow);
+        }
+
+        body.dark-mode .theme-toggle {
+            background: #333;
+            color: #e9ecef;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .card {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border-left: 5px solid var(--primary);
+            display: flex;
+            flex-direction: column;
+            border: 1px solid var(--border);
+        }
+
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 8px 20px var(--shadow);
+        }
+
+        .card.primary {
+            border-left-color: var(--primary);
+            background: linear-gradient(135deg, rgba(0, 102, 204, 0.05) 0%, rgba(0, 102, 204, 0.02) 100%);
+        }
+
+        .card.success {
+            border-left-color: var(--success);
+            background: linear-gradient(135deg, rgba(42, 157, 143, 0.05) 0%, rgba(42, 157, 143, 0.02) 100%);
+        }
+
+        .card.warning {
+            border-left-color: var(--warning);
+            background: linear-gradient(135deg, rgba(241, 162, 8, 0.05) 0%, rgba(241, 162, 8, 0.02) 100%);
+        }
+
+        .card.info {
+            border-left-color: #0088cc;
+            background: linear-gradient(135deg, rgba(0, 136, 204, 0.05) 0%, rgba(0, 136, 204, 0.02) 100%);
+        }
+
+        .card-icon {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: var(--text);
+        }
+
+        .card-desc {
+            font-size: 15px;
+            color: var(--text-soft);
+            line-height: 1.7;
+            margin-bottom: 15px;
+            flex-grow: 1;
+            background: rgba(255,255,255,0.86);
+            border-radius: 8px;
+            padding: 10px 12px 10px 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+
+        .dark-mode .card-desc {
+            color: #e3e8ef;
+            background: rgba(28, 36, 48, 0.9);
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 10px 16px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0052a3;
+            transform: translateX(2px);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #1d7d76;
+            transform: translateX(2px);
+        }
+
+        .btn-warning {
+            background: var(--warning);
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background: #d68b00;
+            transform: translateX(2px);
+        }
+
+        .btn-info {
+            background: #0088cc;
+            color: white;
+        }
+
+        .btn-info:hover {
+            background: #0066aa;
+            transform: translateX(2px);
+        }
+
+        .stats {
+            display: flex;
+            gap: 18px;
+            justify-content: center;
+            margin-bottom: 28px;
+            background: var(--stats-bg);
+            padding: 18px 10px;
+            border-radius: 14px;
+            color: var(--text);
+            border: 1px solid var(--border);
+            box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+        }
+
+        .stat-item {
+            text-align: center;
+            min-width: 170px;
+        }
+
+        .stat-number {
+            font-size: 32px;
+            font-weight: 800;
+            margin-bottom: 2px;
+            color: #2a9d8f;
+        }
+
+        .stat-label {
+            font-size: 15px;
+            opacity: 1;
+            color: var(--text-muted);
+        }
+
+        .footer {
+            text-align: center;
+            color: var(--footer-text);
+            font-size: 13px;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid var(--footer-border);
+        }
+
+        .features {
+            background: var(--card);
+            padding: 25px;
+            border-radius: 12px;
+            margin: 30px 0;
+            box-shadow: 0 4px 12px var(--shadow);
+        }
+
+        .features h2 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: var(--text);
+        }
+
+        .study-text {
+            color: var(--feature-text);
+            line-height: 1.8;
+            margin: 10px 0;
+        }
+
+        .features ul {
+            column-count: 2;
+            gap: 20px;
+        }
+
+        .features li {
+            margin-bottom: 8px;
+            color: var(--feature-text);
+            font-size: 14px;
+        }
+
+        .temporal-chart-wrap {
+            margin-top: 10px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.78);
+        }
+
+        .dark-mode .temporal-chart-wrap {
+            background: rgba(22, 29, 39, 0.9);
+        }
+
+        .temporal-chart {
+            width: 100%;
+            height: 220px;
+            display: block;
+        }
+
+        .temporal-caption {
+            margin-top: 10px;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .dark-mode .subtitle {
+            color: #76e0ad;
+        }
+
+        .dark-mode header p,
+        .dark-mode .features p,
+        .dark-mode .features strong,
+        .dark-mode .info-label,
+        .dark-mode .info-value {
+            color: #dde6f0 !important;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 28px;
+            }
+
+            .cards {
+                grid-template-columns: 1fr;
+            }
+
+            .features ul {
+                column-count: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+
+<div class="container">
+    <header>
+        <h1>🌿 Macrófitas Marinhas das Baias da Ilha de Santa Catarina</h1>
+        <p class="subtitle">Portal de Visualizações Interativas</p>
+        <p class="intro-text">
+            Este portal reúne visualizações interativas, mapas e dados sobre a diversidade, distribuição e relações evolutivas das macrófitas marinhas da Ilha de Santa Catarina, integrando Bouzon (2005) e Batista (2012). Explore cladogramas, mapas georreferenciados, estatísticas e um glossário completo para apoiar estudos, ensino e divulgação científica sobre biodiversidade marinha.
+        </p>
+    </header>
+
+    <div class="stats">
+            <div class="stat-item">
+                <div class="stat-number" id="statEspecies">0</div>
+                <div class="stat-label">Espécies</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="statFilos">0</div>
+                <div class="stat-label">Filos</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="statClasses">0</div>
+                <div class="stat-label">Classes</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="statEstacoes">0</div>
+                <div class="stat-label">Estações de Coleta</div>
+            </div>
+    </div>
+
+    <div class="features">
+        <h2>📈 Série Temporal de Riqueza (2005-2012)</h2>
+        <div class="temporal-chart-wrap">
+            <svg id="temporalSeriesChart" class="temporal-chart" viewBox="0 0 800 220" role="img" aria-label="Série temporal de táxons 2005 e 2012"></svg>
+            <p class="temporal-caption">Totais reportados nas dissertações: Bouzon (2005) = 107 táxons; Batista (2012) = 163 espécies.</p>
+        </div>
+    </div>
+
+    <div class="cards">
+        <div class="card primary">
+            <div class="card-icon">🌳</div>
+            <div class="card-title">Cladograma Interativo Melhorado</div>
+            <div class="card-desc">
+                Explore a árvore filogenética completa das macrófitas marinhas na série temporal integrada (2005-2012). Esta versão avançada permite filtrar por filo, pesquisar espécies, expandir/colapsar ramos, visualizar toda a hierarquia taxonômica ao clicar em um nó, acessar estatísticas dinâmicas, exportar o gráfico em SVG e alternar entre modo claro e escuro.
+            </div>
+            <a href="cladograma_interativo_macrofitas_funcional_filtros_zoom_teste_pronto.html" class="btn btn-primary">Abrir Cladograma Avançado →</a>
+        </div>
+
+        <div class="card info">
+            <div class="card-icon">🌳</div>
+            <div class="card-title">Cladograma Interativo (Simples)</div>
+            <div class="card-desc">
+                Visualização rápida e intuitiva das relações taxonômicas entre filos, classes, ordens, famílias, gêneros e espécies de macrófitas. Permite explorar a estrutura geral do grupo, identificar padrões evolutivos e navegar pela árvore de forma leve, sem filtros avançados. Recomendado para consultas rápidas e uso didático.
+            </div>
+            <a href="cladograma_interativo_melhorado.html" class="btn btn-info">Abrir Cladograma Simples →</a>
+        </div>
+
+        <div class="card success">
+            <div class="card-icon">🗺️</div>
+            <div class="card-title">Mapa Google (GPS)</div>
+            <div class="card-desc">
+                Mapa interativo exibindo as estações de coleta de 2005 e 2012 com coordenadas geográficas reais da Ilha de Santa Catarina. Permite visualizar a distribuição espacial das espécies, explorar pontos de amostragem e analisar padrões geográficos de biodiversidade.
+            </div>
+            <a href="mapa_google_macrofitas.html" class="btn btn-success">Abrir Google Maps →</a>
+        </div>
+
+        <div class="card warning">
+            <div class="card-icon">🧭</div>
+            <div class="card-title">Mapa Clone Fiel (Camadas)</div>
+            <div class="card-desc">
+                Versão fiel ao layout original com controle de camadas retrátil e análise comparativa integrada. Permite alternar entre OpenStreetMap e Satélite, além de visualizar separadamente Bouzon (2005), Batista (2012) e a comparação temporal dos 6 pontos coincidentes.
+            </div>
+            <a href="mapa_google_macrofitas_clone_fiel_camadas.html" class="btn btn-warning">Abrir Mapa Clone Fiel →</a>
+        </div>
+    </div>
+
+    <div class="features" id="dataInfo" style="display: none;">
+        <h2>📁 Arquivos de Dados Disponíveis</h2>
+        <ul>
+            <li><strong>data/cladograma_hierarquia_publicacao.json</strong> - Hierarquia taxonômica integrada</li>
+            <li><strong>data/pontos_mapa.json</strong> - Estações 2005 e 2012 para o mapa</li>
+            <li><strong>../dataset_mestre.csv</strong> - Base mestre harmonizada por estação</li>
+            <li><strong>../crosswalk_estacoes.csv</strong> - Cruzamento espacial entre os dois estudos</li>
+            <li><strong>../intersecao_6pontos_riqueza_2005_2012.csv</strong> - Comparativo direto dos 6 pontos</li>
+            <li><strong>../gerar_dados_publicacao_clone_layout.py</strong> - Gerador dos JSONs da publicação</li>
+        </ul>
+    </div>
+
+    <div class="features">
+        <h2>✨ Características Principais</h2>
+        <ul>
+            <li>✅ Interface interativa com D3.js</li>
+            <li>✅ Modo claro e escuro</li>
+            <li>✅ Pesquisa e filtros em tempo real</li>
+            <li>✅ Informações detalhadas ao clicar</li>
+            <li>✅ Exportação em SVG</li>
+            <li>✅ Zoom e panning</li>
+            <li>✅ Tooltips com hover</li>
+            <li>✅ Dados estruturados em JSON</li>
+            <li>✅ Responsivo para mobile</li>
+            <li>✅ Sem dependências externas (exceto D3.js CDN)</li>
+        </ul>
+    </div>
+
+    <div class="features">
+        <h2>🔬 Sobre o Estudo</h2>
+        <p class="study-text">
+            <strong>Pesquisadoras:</strong> Janayna Lehmkuhl Bouzon (2005) e Manuela Batista (2012)<br>
+            <strong>Integração:</strong> Série temporal e espacial das macrófitas marinhas da Ilha de Santa Catarina.<br>
+            <strong>Instituição:</strong> UFSC - Centro de Ciências Biológicas.<br>
+            <strong>Escopo:</strong> composição taxonômica, distribuição espacial, interseção de estações e indicadores ambientais.<br><br>
+            <strong>Temas:</strong> 1. Baías; 2. Comunidades; 3. Estrutura espacial; 4. Florística; 5. Macroalgas; 6. Urbanização; 7. Série temporal.
+        </p>
+    </div>
+
+    <div class="features">
+        <h2>📚 Glossário de Termos</h2>
+        <button id="toggleGlossary" class="btn btn-info" style="margin-bottom:12px;">Mostrar/Ocultar Glossário</button>
+        <div id="glossaryBox" style="display:none;">
+            <ul style="column-count:2; gap:32px; max-width:900px;">
+                <li><b>Macrófitas:</b> Plantas aquáticas visíveis a olho nu, incluindo algas, gramíneas e plantas superiores.</li>
+                <li><b>Filo:</b> Categoria taxonômica que agrupa organismos com características estruturais semelhantes.</li>
+                <li><b>Classe:</b> Subdivisão do filo, agrupando ordens com características comuns.</li>
+                <li><b>Ordem:</b> Categoria taxonômica abaixo de classe, agrupando famílias relacionadas.</li>
+                <li><b>Família:</b> Agrupa gêneros próximos evolutivamente.</li>
+                <li><b>Gênero:</b> Conjunto de espécies intimamente relacionadas.</li>
+                <li><b>Espécie:</b> Unidade básica da classificação biológica, grupo de organismos capazes de se reproduzir entre si.</li>
+                <li><b>Cladograma:</b> Diagrama em árvore que mostra relações evolutivas entre grupos de organismos.</li>
+                <li><b>Filogenia:</b> História evolutiva e relações de ancestralidade entre organismos.</li>
+                <li><b>Biodiversidade:</b> Variedade de formas de vida em um ambiente.</li>
+                <li><b>Estação de Coleta:</b> Local onde amostras biológicas são coletadas para estudo.</li>
+                <li><b>GPS:</b> Sistema de Posicionamento Global, usado para registrar coordenadas geográficas.</li>
+                <li><b>Distribuição Geográfica:</b> Área onde uma espécie ou grupo ocorre naturalmente.</li>
+                <li><b>Transecto:</b> Linha ou percurso definido para amostragem padronizada em campo.</li>
+                <li><b>Taxonomia:</b> Ciência de classificação dos seres vivos.</li>
+                <li><b>Exportação SVG:</b> Salvar gráficos em formato vetorial escalável.</li>
+                <li><b>Modo Escuro:</b> Opção de visualização com fundo escuro para conforto visual.</li>
+                <li><b>Filtro:</b> Ferramenta para selecionar subconjuntos de dados com base em critérios.</li>
+                <li><b>Hierarquia Taxonômica:</b> Organização dos seres vivos em níveis (filo, classe, ordem, família, gênero, espécie).</li>
+                <li><b>Tooltips:</b> Caixas de informação exibidas ao passar o mouse sobre elementos interativos.</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+    document.getElementById('toggleGlossary').onclick = function() {
+        var box = document.getElementById('glossaryBox');
+        box.style.display = (box.style.display === 'none') ? 'block' : 'none';
+    };
+    </script>
+
+    <div class="footer">
+        <p>Visualizações criadas com D3.js | Dados processados com Python | Autor: Ronan Armando Caetano | © 2026</p>
+    </div>
+</div>
+
+<script>
+async function carregarMetricasIntegradas() {
+    const [resMapa, resClado] = await Promise.all([
+        fetch('data/pontos_mapa.json'),
+        fetch('data/cladograma_hierarquia_publicacao.json')
+    ]);
+    const mapa = await resMapa.json();
+    const clado = await resClado.json();
+
+    const totalEstacoes = Array.isArray(mapa) ? mapa.length : 0;
+
+    const filos = new Set();
+    const classes = new Set();
+    let especies = 0;
+
+    function walk(node, depth) {
+        if (!node) return;
+        if (depth === 1) filos.add(node.name);
+        if (depth === 2) classes.add(node.name);
+        if (!node.children || node.children.length === 0) {
+            especies += 1;
+            return;
+        }
+        node.children.forEach((c) => walk(c, depth + 1));
+    }
+
+    walk(clado, 0);
+
+    document.getElementById('statEspecies').textContent = especies;
+    document.getElementById('statFilos').textContent = filos.size;
+    document.getElementById('statClasses').textContent = classes.size;
+    document.getElementById('statEstacoes').textContent = totalEstacoes;
+}
+
+function desenharSerieTemporal() {
+    const svg = document.getElementById('temporalSeriesChart');
+    if (!svg) return;
+
+    const points = [
+        { year: 2005, value: 107 },
+        { year: 2012, value: 163 }
+    ];
+
+    const width = 800;
+    const height = 220;
+    const margin = { top: 20, right: 40, bottom: 40, left: 60 };
+    const innerW = width - margin.left - margin.right;
+    const innerH = height - margin.top - margin.bottom;
+    const yMax = 180;
+
+    const xFor = (index) => margin.left + (innerW * index / (points.length - 1));
+    const yFor = (value) => margin.top + innerH - (value / yMax) * innerH;
+
+    svg.innerHTML = '';
+    svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+
+    const grid = [0, 50, 100, 150];
+    grid.forEach((tick) => {
+        const y = yFor(tick);
+        const line = `<line x1="${margin.left}" y1="${y}" x2="${width - margin.right}" y2="${y}" stroke="#cbd5e1" stroke-width="1" />`;
+        const label = `<text x="${margin.left - 8}" y="${y + 4}" text-anchor="end" font-size="12" fill="#64748b">${tick}</text>`;
+        svg.insertAdjacentHTML('beforeend', line + label);
+    });
+
+    const p0 = points[0];
+    const p1 = points[1];
+    const x0 = xFor(0);
+    const y0 = yFor(p0.value);
+    const x1 = xFor(1);
+    const y1 = yFor(p1.value);
+
+    svg.insertAdjacentHTML('beforeend', `<line x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}" stroke="#2563eb" stroke-width="3" />`);
+    svg.insertAdjacentHTML('beforeend', `<circle cx="${x0}" cy="${y0}" r="6" fill="#1d4ed8" />`);
+    svg.insertAdjacentHTML('beforeend', `<circle cx="${x1}" cy="${y1}" r="6" fill="#16a34a" />`);
+
+    svg.insertAdjacentHTML('beforeend', `<text x="${x0}" y="${height - 12}" text-anchor="middle" font-size="12" fill="#334155">2005</text>`);
+    svg.insertAdjacentHTML('beforeend', `<text x="${x1}" y="${height - 12}" text-anchor="middle" font-size="12" fill="#334155">2012</text>`);
+    svg.insertAdjacentHTML('beforeend', `<text x="${x0}" y="${y0 - 10}" text-anchor="middle" font-size="12" fill="#1d4ed8">107</text>`);
+    svg.insertAdjacentHTML('beforeend', `<text x="${x1}" y="${y1 - 10}" text-anchor="middle" font-size="12" fill="#16a34a">163</text>`);
+    svg.insertAdjacentHTML('beforeend', `<text x="${margin.left}" y="${margin.top - 6}" text-anchor="start" font-size="12" fill="#334155">Táxons / espécies</text>`);
+}
+
+function toggleTheme() {
+    const isDark = document.body.classList.toggle('dark-mode');
+    localStorage.setItem('darkMode', isDark);
+    document.querySelector('.theme-toggle').textContent = isDark ? '☀️' : '🌙';
+}
+
+function showDataInfo() {
+    const elem = document.getElementById('dataInfo');
+    elem.style.display = elem.style.display === 'none' ? 'block' : 'none';
+}
+
+// Verificar tema salvo
+if (localStorage.getItem('darkMode') === 'true') {
+    document.body.classList.add('dark-mode');
+    document.querySelector('.theme-toggle').textContent = '☀️';
+}
+
+desenharSerieTemporal();
+
+carregarMetricasIntegradas().catch((err) => {
+    console.error('Falha ao carregar métricas integradas (2005-2012)', err);
+});
+</script>
+
+</body>
+</html>

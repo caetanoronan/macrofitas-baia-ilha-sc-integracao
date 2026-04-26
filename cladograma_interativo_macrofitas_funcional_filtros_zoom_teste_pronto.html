@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cladograma Interativo: Macrófitas Marinhas das Baias Ilha de Santa Catarina</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f5f5f5; color: #222; margin: 0; padding: 0; transition: background 0.3s, color 0.3s; }
+        .container { max-width: 1600px; margin: 0 auto; padding: 24px; }
+        h1 { text-align: center; }
+        .legend { margin: 16px 0; display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+        .legend-item { display: flex; align-items: center; gap: 6px; }
+        .legend-color { width: 18px; height: 18px; border-radius: 3px; display: inline-block; }
+        .temporal-filter { text-align: center; margin-bottom: 10px; }
+        .temporal-btn { margin: 0 4px; padding: 6px 12px; border: 1px solid #ccc; border-radius: 6px; background: #fff; cursor: pointer; font-size: 13px; }
+        .temporal-btn.active { background: #1f2937; color: #fff; border-color: #1f2937; }
+        #cladogram { background: #fff; border: 1px solid #ccc; border-radius: 8px; }
+        .tooltip { position: absolute; background: #fff; border: 1px solid #888; padding: 8px 12px; border-radius: 4px; pointer-events: none; font-size: 13px; box-shadow: 0 2px 8px #0002; z-index: 10; }
+        #filter-btns { text-align: center; margin-bottom: 18px; }
+        .filter-btn { margin: 0 6px; padding: 7px 18px; border: none; border-radius: 4px; background: #e0e0e0; cursor: pointer; font-size: 1em; transition: background 0.2s; color: #222; }
+        .filter-btn[data-filo="Rhodophyta"] { background: #e63946; color: #fff; }
+        .filter-btn[data-filo="Chlorophyta"] { background: #2a9d8f; color: #fff; }
+        .filter-btn[data-filo="Ochrophyta"] { background: #f1a208; color: #222; }
+        .filter-btn[data-filo="Phaeophyceae"] { background: #f6c453; color: #222; }
+        .filter-btn[data-filo="Magnoliophyta"] { background: #a8dadc; color: #222; }
+        .filter-btn.active, .filter-btn:hover { filter: brightness(0.85); }
+        .controls { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; justify-content: center; }
+        .search-box { min-width: 200px; }
+        .search-box input { width: 100%; padding: 8px 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 15px; }
+        .btn { padding: 8px 16px; border: 1px solid #ccc; background: #fff; color: #222; border-radius: 6px; cursor: pointer; font-size: 15px; transition: all 0.2s; }
+        .btn.primary { background: #2a9d8f; color: #fff; border-color: #2a9d8f; }
+        .btn.primary:hover { opacity: 0.9; }
+        .btn:hover { background: #e0e0e0; }
+        .stats { display: flex; gap: 18px; justify-content: center; margin-bottom: 18px; }
+        .stat-box { padding: 10px 18px; border-radius: 6px; background: #fff; border: 1px solid #ccc; text-align: center; }
+        .stat-number { font-size: 22px; font-weight: 700; color: #2a9d8f; }
+        .stat-label { font-size: 13px; color: #666; }
+        .content { display: flex; gap: 24px; }
+        .cladogram-panel { flex: 1; }
+        .info-panel { width: 340px; border: 1px solid #ccc; border-radius: 8px; background: #fff; padding: 18px; box-shadow: 0 2px 8px #0001; overflow-y: auto; max-height: 700px; }
+        .info-title { font-size: 16px; font-weight: 700; margin-bottom: 15px; color: #2a9d8f; }
+        .info-item { margin-bottom: 12px; font-size: 13px; }
+        .info-label { font-weight: 600; color: #666; }
+        .info-value { margin-top: 2px; font-family: 'Courier New', monospace; }
+        .dark-mode { background: #1a1a1a !important; color: #e9ecef !important; }
+        .dark-mode .info-panel, .dark-mode #cladogram, .dark-mode .stat-box { background: #23272b !important; color: #e9ecef !important; border-color: #444 !important; }
+        .dark-mode .btn { background: #23272b !important; color: #e9ecef !important; border-color: #444 !important; }
+        .dark-mode .btn.primary { background: #2a9d8f !important; color: #fff !important; border-color: #2a9d8f !important; }
+        .dark-mode .search-box input { background: #23272b !important; color: #e9ecef !important; border-color: #444 !important; }
+        .dark-mode .legend, .dark-mode .legend-item { background: #23272b !important; color: #e9ecef !important; }
+        @media (max-width: 1200px) { .content { flex-direction: column; } .info-panel { width: 100%; max-height: none; } }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🌿 Cladograma Interativo: Macrófitas Marinhas das Baias Ilha de Santa Catarina</h1>
+    <div class="legend">
+        <div class="legend-item"><span class="legend-color" style="background:#e63946"></span>Rhodophyta</div>
+        <div class="legend-item"><span class="legend-color" style="background:#f1a208"></span>Ochrophyta</div>
+        <div class="legend-item"><span class="legend-color" style="background:#2a9d8f"></span>Chlorophyta</div>
+    </div>
+    <div id="temporal-filter-btns" class="temporal-filter"></div>
+    <div class="controls">
+        <div class="search-box"><input type="text" id="searchInput" placeholder="🔍 Pesquise por táxon..."></div>
+        <button class="btn primary" onclick="toggleDarkMode()">🌙 Modo Escuro</button>
+        <button class="btn" onclick="resetZoom()">🔍 Resetar Zoom</button>
+        <button class="btn" onclick="exportSVG()">📥 Exportar SVG</button>
+    </div>
+    <div class="stats">
+        <div class="stat-box"><div class="stat-number" id="statTotal">0</div><div class="stat-label">Espécies</div></div>
+        <div class="stat-box"><div class="stat-number" id="statPhyla">0</div><div class="stat-label">Filos</div></div>
+        <div class="stat-box"><div class="stat-number" id="statClass">0</div><div class="stat-label">Classes</div></div>
+        <div class="stat-box"><div class="stat-number" id="statFamily">0</div><div class="stat-label">Famílias</div></div>
+    </div>
+    <div id="filter-btns"></div>
+    <div class="content">
+        <div class="cladogram-panel"><svg id="cladogram" width="1100" height="800"></svg></div>
+        <div class="info-panel">
+            <div class="info-title">ℹ️ Informações</div>
+            <div class="info-item" style="margin-bottom:18px; color:#2a9d8f; font-size:14px;">
+                Clique em qualquer nó (bolinha) para ver detalhes sobre esse táxon.<br>
+                A visualização mostra a hierarquia: <b>Filo → Classe → Ordem → Família → Gênero</b>
+            </div>
+            <div id="nodeInfo"></div>
+        </div>
+    </div>
+</div>
+<div class="tooltip" id="tooltip" style="display:none"></div>
+<script>
+const hierarchicalData = {"name":"Macrófitas ISC","children":[{"name":"Rhodophyta","children":[{"name":"Florideophyceae","children":[{"name":"Ceramiales","children":[{"name":"Rhodomelaceae","children":[{"name":"Acanthophora","children":[{"name":"Acanthophoraspicifera"}]},{"name":"Anotrichium","children":[{"name":"Anotrichiumyagii"}]},{"name":"Asparagopsis","children":[{"name":"Asparagopsistaxiformis"}]},{"name":"Bostrychia","children":[{"name":"Bostrychiamoritziana"},{"name":"Bostrychiaradicans"},{"name":"Bostrychiatenella"}]},{"name":"Bryocladia","children":[{"name":"Bryocladiathyrsigera"}]},{"name":"Bryothamnion","children":[{"name":"Bryothamnionseaforthii"}]},{"name":"Chondria","children":[{"name":"Chondriapolyrhiza"}]},{"name":"Dipterosiphonia","children":[{"name":"Dipterosiphoniadendritica"},{"name":"Dipterosiphoniarigens"}]},{"name":"Herposiphonia","children":[{"name":"Herposiphoniasecunda"},{"name":"Herposiphoniatenella"}]},{"name":"Heterosiphonia","children":[{"name":"Heterosiphoniacrispella"}]},{"name":"Laurencia","children":[{"name":"Laurenciacatarinensis"},{"name":"Laurenciadendroidea"},{"name":"Laurenciasp."}]},{"name":"Neosiphonia","children":[{"name":"Neosiphoniaferulacea"},{"name":"Neosiphoniaflaccidissima"},{"name":"Neosiphoniahowei"},{"name":"Neosiphoniasphaerocarpa"},{"name":"Neosiphoniatepida"}]},{"name":"Ophidocladus","children":[{"name":"Ophidocladussimpliciusculus"}]},{"name":"Palisada","children":[{"name":"Palisadaflagellifera"}]},{"name":"Polysiphonia","children":[{"name":"Polysiphoniascopulorum"},{"name":"Polysiphoniasertularioides"},{"name":"Polysiphoniastricta"},{"name":"Polysiphoniasubtilissima"}]},{"name":"Pterosiphonia","children":[{"name":"Pterosiphoniaparasitica"},{"name":"Pterosiphoniaparasiticavar. australis"},{"name":"Pterosiphoniapennata"}]}]},{"name":"Callithamniaceae","children":[{"name":"Aglaothamnion","children":[{"name":"Aglaothamnionfelipponei"},{"name":"Aglaothamnionuruguayense"}]},{"name":"Callithamnion","children":[{"name":"Callithamniontetragonum"}]},{"name":"Ptilothamnion","children":[{"name":"Ptilothamnionspeluncarum"}]}]},{"name":"Delesseriaceae","children":[{"name":"Caloglossa","children":[{"name":"Caloglossaleprieurii"}]},{"name":"Cryptopleura","children":[{"name":"Cryptopleuraramosa"}]}]},{"name":"Ceramiaceae","children":[{"name":"Centroceras","children":[{"name":"Centrocerasclavulatum"}]},{"name":"Ceramium","children":[{"name":"Ceramiumbrasiliense"},{"name":"Ceramiumdawsonii"},{"name":"Ceramiumdeslongchampsii"},{"name":"Ceramiumtenerrimum"}]}]},{"name":"Dasyaceae","children":[{"name":"Dasya","children":[{"name":"Dasyarigidula"}]}]},{"name":"Spyridiaceae","children":[{"name":"Spyridia","children":[{"name":"Spyridiafilamentosa"},{"name":"Spyridiahypnoides"}]}]}]},{"name":"Acrochaetiales","children":[{"name":"Acrochaetiaceae","children":[{"name":"Acrochaetium","children":[{"name":"Acrochaetiumglobosum"},{"name":"Acrochaetiummicroscopicum"},{"name":"Acrochaetiumsp."}]},{"name":"Colaconema","children":[{"name":"Colaconemacodicola"}]}]}]},{"name":"Stylonematales","children":[{"name":"Stylonemataceae","children":[{"name":"Stylonema","children":[{"name":"Stylonemaalsidii"}]}]}]},{"name":"Erythropeltidales","children":[{"name":"Erythrotrichiaceae","children":[{"name":"Erythrotrichia","children":[{"name":"Erythrotrichiacarnea"}]},{"name":"Sahlingia","children":[{"name":"Sahlingiasubintegra"}]}]}]},{"name":"Corallinales","children":[{"name":"Hapalidiaceae","children":[{"name":"Amphiroa","children":[{"name":"Amphiroafragilissima"},{"name":"Amphiroabeauvoisii"}]}]},{"name":"Corallinaceae","children":[{"name":"Arthrocardia","children":[{"name":"Arthrocardiavariabilis"}]},{"name":"Corallina","children":[{"name":"Corallinaofficinalis"}]},{"name":"Jania","children":[{"name":"Janiaadhaerens"},{"name":"Janiacapillacea"},{"name":"Janiacrassa"},{"name":"Janiasagittata"},{"name":"Janiasp.1"},{"name":"Janiasp.2"}]}]}]},{"name":"Gelidiales","children":[{"name":"Gelidiaceae","children":[{"name":"Gelidium","children":[{"name":"Gelidiumcrinale"},{"name":"Gelidiumfloridanum"},{"name":"Gelidiumsp.1"},{"name":"Gelidiumsp2"},{"name":"Gelidiumpusillum"}]}]},{"name":"Gelidiellaceae","children":[{"name":"Pterocladiella","children":[{"name":"Pterocladiellacapillacea"}]}]},{"name":"Lomentariaceae","children":[{"name":"Ceratodictyon","children":[{"name":"Ceratodictyonvariabile"}]}]}]},{"name":"Gigartinales","children":[{"name":"Gigartinaceae","children":[{"name":"Chondracanthus","children":[{"name":"Chondracanthusacicularis"},{"name":"Chondracanthussaundersii"},{"name":"Chondracanthusteedei"}]}]},{"name":"Phyllophoraceae","children":[{"name":"Gymnogongrus","children":[{"name":"Gymnogongrusgriffithsiae"}]}]},{"name":"Cystocloniaceae","children":[{"name":"Hypnea","children":[{"name":"Hypneacenomyce"},{"name":"Hypneacervicornis"},{"name":"Hypneamusciformis"},{"name":"Hypneanigrescens"},{"name":"Hypneaspinella"},{"name":"Hypneasp."}]}]}]},{"name":"Gracilariales","children":[{"name":"Gracilariaceae","children":[{"name":"Gracilaria","children":[{"name":"Gracilariasp."},{"name":"Gracilariatepocensis"},{"name":"Gracilariadomingensis"}]},{"name":"Hydropuntia","children":[{"name":"Hydropuntiacaudata"}]}]}]},{"name":"Halymeniales","children":[{"name":"Halymeniaceae","children":[{"name":"Grateloupia","children":[{"name":"Grateloupiacuneifolia"}]},{"name":"Halymenia","children":[{"name":"Halymeniafloridana"},{"name":"Halymeniasp.1"},{"name":"Halymeniasp.2"}]}]}]},{"name":"Hildenbrandiales","children":[{"name":"Hildenbrandiaceae","children":[{"name":"Hildenbrandia","children":[{"name":"Hildenbrandiarubra"}]}]}]},{"name":"Nemaliales","children":[{"name":"Liagoraceae","children":[{"name":"Nemalion","children":[{"name":"Nemalionhelminthoides"}]}]}]},{"name":"Bonnemaisoniales","children":[{"name":"Bonnemaisoniaceae","children":[{"name":"Asparagopsis","children":[{"name":"Asparagopsistaxiformis"}]}]}]},{"name":"Plocamiales","children":[{"name":"Plocamiaceae","children":[{"name":"Plocamium","children":[{"name":"Plocamiumbrasiliense"}]}]}]},{"name":"Rhodymeniales","children":[{"name":"Rhodymeniaceae","children":[{"name":"Rhodymenia","children":[{"name":"Rhodymeniapseudopalmata"}]}]},{"name":"Champiaceae","children":[{"name":"Champia","children":[{"name":"Champiaparvula"}]}]}]}]},{"name":"Bangiophyceae","children":[{"name":"Bangiales","children":[{"name":"Bangiaceae","children":[{"name":"Bangia","children":[{"name":"Bangiafuscopurpurea"}]},{"name":"Pyropia","children":[{"name":"Pyropiaacanthophora"},{"name":"Pyropiasp."},{"name":"Pyropiaspiralis"}]}]}]}]}]},{"name":"Heterokontophyta","children":[{"name":"Phaeophyceae","children":[{"name":"Ectocarpales","children":[{"name":"Acinetosporaceae","children":[{"name":"Asterocladon","children":[{"name":"Asterocladonrhodochortonoides"}]},{"name":"Asteronema","children":[{"name":"Asteronemabreviarticulatum"}]},{"name":"Feldmannia","children":[{"name":"Feldmanniairregularis"}]},{"name":"Hincksia","children":[{"name":"Hincksiamitchelliae"},{"name":"Hincksiasp."}]}]},{"name":"Ectocarpaceae","children":[{"name":"Bachelotia","children":[{"name":"Bachelotiaantillarum"}]},{"name":"Ectocarpus","children":[{"name":"Ectocarpussp."}]}]},{"name":"Chordariaceae","children":[{"name":"Levringia","children":[{"name":"Levringiabrasiliensis"}]}]},{"name":"Scytosiphonaceae","children":[{"name":"Chnoospora","children":[{"name":"Chnoosporaminima"}]},{"name":"Colpomenia","children":[{"name":"Colpomeniasinuosa"}]},{"name":"Petalonia","children":[{"name":"Petaloniafascia"},{"name":"Petaloniasp."}]},{"name":"Rosenvingea","children":[{"name":"Rosenvingeaorientalis"}]},{"name":"Scytosiphon","children":[{"name":"Scytosiphonlomentaria"}]}]}]},{"name":"Dictyotales","children":[{"name":"Dictyotaceae","children":[{"name":"Canistrocarpus","children":[{"name":"Canistrocarpuscervicornis"}]},{"name":"Dictyopteris","children":[{"name":"Dictyopterisdelicatula"}]},{"name":"Dictyota","children":[{"name":"Dictyotaciliolata"},{"name":"Dictyotamenstrualis"},{"name":"Dictyotasp."}]},{"name":"Padina","children":[{"name":"Padinagymnospora"},{"name":"Padinasp."}]}]}]},{"name":"Fucales","children":[{"name":"Sargassaceae","children":[{"name":"Sargassum","children":[{"name":"Sargassumfilipendula"},{"name":"Sargassumcymosum"},{"name":"Sargassumcymosumvar. nanum"},{"name":"Sargassumfurcatum"},{"name":"Sargassumsp."},{"name":"Sargassumstenophyllum"},{"name":"Sargassumvulgare"},{"name":"Sargassumvulgarevar. foliosissimum"}]}]}]},{"name":"Sphacelariales","children":[{"name":"Sphacelariaceae","children":[{"name":"Sphacelaria","children":[{"name":"Sphacelariabrachygona"},{"name":"Sphacelariarigidula"},{"name":"Sphacelariasp."},{"name":"Sphacelariatribuloides"}]}]}]},{"name":"Ralfsiales","children":[{"name":"Ralfsiaceae","children":[{"name":"Neoralfsia","children":[{"name":"Neoralfsiaexpansa"}]}]}]}]}]},{"name":"Chlorophyta","children":[{"name":"Ulvophyceae","children":[{"name":"Ulvales","children":[{"name":"Gayraliaceae","children":[{"name":"Gayralia","children":[{"name":"Gayraliaoxysperma"}]}]},{"name":"Gomontiaceae","children":[{"name":"Blidingia","children":[{"name":"Blidingiamarginata"}]}]},{"name":"Ulvaceae","children":[{"name":"Ulva","children":[{"name":"Ulvaclathrata"},{"name":"Ulvachaetomorphoides"},{"name":"Ulvafasciata"},{"name":"Ulvaflexuosa"},{"name":"Ulvalactuca"},{"name":"Ulvalinza"},{"name":"Ulvaprolifera"},{"name":"Ulvarigida"}]}]}]},{"name":"Cladophorales","children":[{"name":"Cladophoraceae","children":[{"name":"Chaetomorpha","children":[{"name":"Chaetomorphaaerea"},{"name":"Chaetomorphaantennina"}]},{"name":"Cladophora","children":[{"name":"Cladophoraalbida"},{"name":"Cladophoracatenata"},{"name":"Cladophoracoelothrix"},{"name":"Cladophoracorallicola"},{"name":"Cladophoracrispata"},{"name":"Cladophoraprolifera"},{"name":"Cladophorasp."},{"name":"Cladophoravagabunda"}]},{"name":"Rhizoclonium","children":[{"name":"Rhizocloniumafricanum"},{"name":"Rhizocloniumriparium"}]}]}]},{"name":"Siphonocladales","children":[{"name":"Boodleaceae","children":[{"name":"Cladophoropsis","children":[{"name":"Cladophoropsismembranacea"}]}]}]},{"name":"Bryopsidales","children":[{"name":"Bryopsidaceae","children":[{"name":"Bryopsis","children":[{"name":"Bryopsishypnoides"},{"name":"Bryopsispennata"},{"name":"Bryopsisplumosa"}]}]},{"name":"Codiaceae","children":[{"name":"Codium","children":[{"name":"Codiumdecorticatum"},{"name":"Codiumintertextum"},{"name":"Codiumisthmocladum"},{"name":"Codiumtaylorii"}]}]},{"name":"Caulerpaceae","children":[{"name":"Caulerpa","children":[{"name":"Caulerpafastigiata"}]}]}]},{"name":"Dasycladales","children":[{"name":"Polyphysaceae","children":[{"name":"Acetabularia","children":[{"name":"Acetabulariacalyculus"}]}]}]}]}]},{"name":"Magnoliophyta","children":[{"name":"Liliopsida","children":[{"name":"Alismatales","children":[{"name":"Ruppiaceae","children":[{"name":"Ruppia","children":[{"name":"Ruppiamaritima"}]}]},{"name":"Cymodoceaceae","children":[{"name":"Halodule","children":[{"name":"Halodulewrightii"}]}]}]}]}]}]};
+const colorScale = {
+    'Rhodophyta': '#e63946',
+    'Heterokontophyta': '#f1a208',
+    'Ochrophyta': '#f1a208',
+    'Phaeophyceae': '#f6c453',
+    'Chlorophyta': '#2a9d8f',
+    'Magnoliophyta': '#a8dadc'
+};
+
+function normalizeFiloName(name) {
+    if (!name) return '';
+    if (name === 'Heterokontophyta') return 'Ochrophyta';
+    return name;
+}
+
+function colorForFilo(name) {
+    const normalized = normalizeFiloName(name);
+    return colorScale[normalized] || '#7f8c8d';
+}
+
+function normalizeTaxonName(name) {
+    const raw = String(name || '').trim();
+    if (!raw) return raw;
+    if (/^Enteromorpha$/i.test(raw)) return 'Ulva';
+    if (/^E\.\s+/i.test(raw)) return `Ulva ${raw.replace(/^E\.\s+/i, '').trim()}`;
+    if (/^Enteromorpha\s+/i.test(raw)) return `Ulva ${raw.replace(/^Enteromorpha\s+/i, '').trim()}`;
+    return raw;
+}
+
+function normalizeTaxonKey(name) {
+    return normalizeTaxonName(name)
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, ' ')
+        .trim();
+}
+
+function normalizeHierarchy(node, depth = 0) {
+    const rawName = String(node.name || '');
+    const normalizedName = depth === 1 ? normalizeFiloName(rawName) : normalizeTaxonName(rawName);
+    const cloned = {
+        ...node,
+        name: normalizedName,
+        children: Array.isArray(node.children) ? node.children.map((child) => normalizeHierarchy(child, depth + 1)) : []
+    };
+    return cloned;
+}
+
+function mergeTreeByName(node) {
+    const children = Array.isArray(node.children) ? node.children : [];
+    if (!children.length) return { ...node, children: [] };
+
+    const grouped = new Map();
+    for (const child of children) {
+        const mergedChild = mergeTreeByName(child);
+        const key = mergedChild.name || 'Sem nome';
+        if (!grouped.has(key)) {
+            grouped.set(key, mergedChild);
+            continue;
+        }
+        const prev = grouped.get(key);
+        grouped.set(key, {
+            name: key,
+            children: [...(prev.children || []), ...(mergedChild.children || [])]
+        });
+    }
+
+    return {
+        ...node,
+        children: [...grouped.values()].map((c) => mergeTreeByName(c))
+    };
+}
+
+function normalizeAndMergeTree(node) {
+    return mergeTreeByName(normalizeHierarchy(node));
+}
+
+let sharedSpeciesSet = new Set();
+let only2005SpeciesSet = new Set();
+let only2012SpeciesSet = new Set();
+let activeTemporalMode = 'all';
+let activeFiloMode = '';
+
+function getSpeciesStatus(speciesName) {
+    const key = normalizeTaxonKey(speciesName);
+    if (!key) return 'none';
+    if (sharedSpeciesSet.has(key)) return 'shared';
+    if (only2005SpeciesSet.has(key)) return 'only2005';
+    if (only2012SpeciesSet.has(key)) return 'only2012';
+    return 'none';
+}
+
+function getStatusLabel(status) {
+    if (status === 'shared') return 'Compartilhada entre 2005 e 2012';
+    if (status === 'only2005') return 'Registro apenas em 2005';
+    if (status === 'only2012') return 'Registro apenas em 2012';
+    return 'Sem classificação temporal';
+}
+
+function getStatusColor(status) {
+    if (status === 'shared') return '#6d28d9';
+    if (status === 'only2005') return '#1d4ed8';
+    if (status === 'only2012') return '#16a34a';
+    return '#333';
+}
+
+function isLeafNode(d) {
+    return !d.children && !d._children;
+}
+let hierarchicalDataRuntime = normalizeAndMergeTree(hierarchicalData);
+// --- VARIÁVEIS GLOBAIS E INICIAIS ---
+let filteredData = null;
+let currentData = hierarchicalDataRuntime;
+let rootNode = null;
+const svg = d3.select('#cladogram');
+const width = +svg.attr('width');
+const height = +svg.attr('height');
+const g = svg.append('g').attr('transform', 'translate(50,50)');
+const tree = d3.tree().size([width-100, height-100]);
+const btnsDiv = d3.select('#filter-btns');
+const temporalBtnsDiv = d3.select('#temporal-filter-btns');
+
+function montarBotoesFiltro() {
+    btnsDiv.html('');
+    const filos = [...new Set((hierarchicalDataRuntime.children || []).map(x => x.name))]
+        .filter((name) => name && name !== 'Nao informado');
+    filos.forEach(filo => {
+        btnsDiv.append('button')
+            .attr('class', 'filter-btn')
+            .attr('data-filo', filo)
+            .text(filo)
+            .style('background', colorForFilo(filo));
+    });
+    btnsDiv.append('button')
+        .attr('class', 'filter-btn')
+        .attr('id', 'reset-btn')
+        .text('Mostrar todas');
+
+    btnsDiv.selectAll('.filter-btn').on('click', function() {
+        btnsDiv.selectAll('.filter-btn').classed('active', false);
+        d3.select(this).classed('active', true);
+        const filo = d3.select(this).attr('data-filo');
+        activeFiloMode = filo || '';
+        applyAllFiltersAndRender();
+    });
+
+    d3.select('#reset-btn').on('click', function() {
+        btnsDiv.selectAll('.filter-btn').classed('active', false);
+        d3.select(this).classed('active', true);
+        activeFiloMode = '';
+        applyAllFiltersAndRender();
+    });
+
+    d3.select('#reset-btn').classed('active', true);
+}
+
+function montarBotoesTemporais() {
+    temporalBtnsDiv.html('');
+    const opcoes = [
+        { mode: 'all', label: 'Todos' },
+        { mode: 'shared', label: 'Compartilhadas' },
+        { mode: 'only2005', label: 'Somente 2005' },
+        { mode: 'only2012', label: 'Somente 2012' }
+    ];
+
+    opcoes.forEach((opt) => {
+        temporalBtnsDiv.append('button')
+            .attr('class', 'temporal-btn')
+            .attr('data-mode', opt.mode)
+            .text(opt.label);
+    });
+
+    temporalBtnsDiv.selectAll('.temporal-btn').on('click', function() {
+        temporalBtnsDiv.selectAll('.temporal-btn').classed('active', false);
+        d3.select(this).classed('active', true);
+        activeTemporalMode = d3.select(this).attr('data-mode') || 'all';
+        applyAllFiltersAndRender();
+    });
+
+    temporalBtnsDiv.select('[data-mode=\"all\"]').classed('active', true);
+}
+
+// --- FUNÇÕES DE ESTATÍSTICAS ---
+function updateStats(data) {
+    let filos = 0, totalClasses = 0, totalFamilies = 0, totalSpecies = 0;
+    function walk(node, depth) {
+        if (depth === 1) filos++;
+        if (depth === 2) totalClasses++;
+        if (depth === 4) totalFamilies++;
+        if (!node.children || node.children.length === 0) {
+            totalSpecies++;
+            return;
+        }
+        for (const child of node.children) walk(child, depth + 1);
+    }
+    walk(data, 0);
+    document.getElementById('statTotal').textContent = totalSpecies;
+    document.getElementById('statPhyla').textContent = filos;
+    document.getElementById('statClass').textContent = totalClasses;
+    document.getElementById('statFamily').textContent = totalFamilies;
+}
+
+// --- FILTRO POR FILO ---
+function filterFilo(filo) {
+    if (!filo) return hierarchicalDataRuntime;
+    const found = (hierarchicalDataRuntime.children || []).find(child => child.name === filo);
+    return found ? { ...hierarchicalDataRuntime, children: [found] } : hierarchicalDataRuntime;
+}
+
+function filterByTemporalStatus(node) {
+    if (activeTemporalMode === 'all') return node;
+    if (!node.children || !node.children.length) {
+        const status = getSpeciesStatus(node.name);
+        return status === activeTemporalMode ? node : null;
+    }
+    const filteredChildren = node.children
+        .map(filterByTemporalStatus)
+        .filter(Boolean);
+    if (!filteredChildren.length) return null;
+    return { ...node, children: filteredChildren };
+}
+
+function filterBySearch(node, query) {
+    if (!query) return node;
+    const lowered = query.toLowerCase();
+    if (node.name && node.name.toLowerCase().includes(lowered)) return node;
+    if (!node.children || !node.children.length) return null;
+    const filteredChildren = node.children.map((c) => filterBySearch(c, query)).filter(Boolean);
+    if (!filteredChildren.length) return null;
+    return { ...node, children: filteredChildren };
+}
+
+function applyAllFiltersAndRender() {
+    let data = filterFilo(activeFiloMode);
+    data = filterByTemporalStatus(data) || { name: 'Nenhum resultado', children: [] };
+    const query = String(document.getElementById('searchInput').value || '').trim();
+    data = filterBySearch(data, query) || { name: 'Nenhum resultado', children: [] };
+    currentData = data;
+    updateStats(currentData);
+    render(currentData);
+}
+
+// --- BUSCA POR TÁXON ---
+document.getElementById('searchInput').addEventListener('input', function(e) {
+    applyAllFiltersAndRender();
+});
+
+// --- PAINEL DE INFORMAÇÕES ---
+function showNodeInfo(d) {
+    // Monta a hierarquia do nó até a raiz
+    let path = d.ancestors().reverse().map(n => n.data.name);
+    let hierLabels = ["Filo", "Classe", "Ordem", "Família", "Gênero", "Espécie"];
+    let html = `<div class=\"info-item\"><div class=\"info-label\">Hierarquia</div><div class=\"info-value\">`;
+    for (let i = 1; i < path.length; i++) {
+        html += `<b>${hierLabels[i-1]||'Nível'}</b>: ${path[i]}<br>`;
+    }
+    html += `</div></div>`;
+    html += `<div class=\"info-item\"><div class=\"info-label\">Nome</div><div class=\"info-value\">${d.data.name}</div></div>`;
+    if (d.children) html += `<div class=\"info-item\"><div class=\"info-label\">Subníveis</div><div class=\"info-value\">${d.children.length}</div></div>`;
+    if (isLeafNode(d)) {
+        const status = getSpeciesStatus(d.data.name);
+        html += `<div class=\"info-item\"><div class=\"info-label\" style='color:#388e3c;font-weight:bold'>Este nó representa uma espécie</div></div>`;
+        html += `<div class=\"info-item\"><div class=\"info-label\">Status temporal</div><div class=\"info-value\" style='color:${getStatusColor(status)};font-weight:700'>${getStatusLabel(status)}</div></div>`;
+    }
+    document.getElementById('nodeInfo').innerHTML = html;
+}
+
+// --- RENDERIZAÇÃO E INTERATIVIDADE ---
+function render(data) {
+    g.selectAll('*').remove();
+    rootNode = d3.hierarchy(data);
+    tree(rootNode);
+    // Links coloridos por filo
+    const getFilo = d => d.ancestors().find(a=>a.depth===1)?.data.name;
+    g.selectAll('.link')
+        .data(rootNode.links())
+        .enter()
+        .append('path')
+        .attr('class','link')
+        .attr('fill','none')
+        .attr('stroke',d=>colorForFilo(getFilo(d.source)))
+        .attr('stroke-width',2)
+        .attr('d',d3.linkVertical().x(d=>d.x).y(d=>d.y));
+    // Nós
+    const node = g.selectAll('.node')
+        .data(rootNode.descendants())
+        .enter()
+        .append('g')
+        .attr('class','node')
+        .attr('transform',d=>`translate(${d.x},${d.y})`);
+    node.append('circle')
+        .attr('r',6)
+        .attr('fill',d=>colorForFilo(getFilo(d)))
+        .attr('stroke',d=>isLeafNode(d) ? getStatusColor(getSpeciesStatus(d.data.name)) : '#333')
+        .attr('stroke-width',d=>isLeafNode(d) && getSpeciesStatus(d.data.name) !== 'none' ? 2.4 : 1.1)
+        .on('click', function(event, d) {
+            if (d.children) { d._children = d.children; d.children = null; }
+            else if (d._children) { d.children = d._children; d._children = null; }
+            render(rootNode.data);
+            showNodeInfo(d);
+            event.stopPropagation();
+        });
+    node.append('text')
+        .attr('dy','-1em')
+        .attr('text-anchor','start')
+        .attr('transform', d => isLeafNode(d) ? 'rotate(90)' : 'rotate(45)')
+        .text(d=>d.data.name)
+        .style('font-size','11px')
+        .style('fill',d=>isLeafNode(d) ? getStatusColor(getSpeciesStatus(d.data.name)) : '#222')
+        .style('font-weight',d=>isLeafNode(d) && getSpeciesStatus(d.data.name) === 'shared' ? '700' : '400');
+    // Tooltip detalhado
+    node.on('mouseover',function(event,d){
+        const status = isLeafNode(d) ? getSpeciesStatus(d.data.name) : 'none';
+        const statusHtml = isLeafNode(d)
+            ? `<br>Status temporal: <b style="color:${getStatusColor(status)}">${getStatusLabel(status)}</b>`
+            : '';
+        d3.select('#tooltip').style('display','block').html(`<b>${d.data.name}</b><br>Nível: ${d.depth}${statusHtml}`)
+            .style('left', (event.pageX+10)+'px')
+            .style('top', (event.pageY+10)+'px');
+    }).on('mouseout',()=>d3.select('#tooltip').style('display','none'));
+    // Atualizar painel info ao clicar na raiz
+    showNodeInfo(rootNode);
+}
+
+// --- ZOOM E PAN COM LIMITES ---
+svg.call(d3.zoom().scaleExtent([0.3,2]).on('zoom', (event)=>g.attr('transform', event.transform)));
+
+// --- EXPORTAÇÃO SVG ---
+function exportSVG() {
+    const svgNode = document.getElementById('cladogram');
+    const serializer = new XMLSerializer();
+    const svgString = serializer.serializeToString(svgNode);
+    const blob = new Blob([svgString], { type: 'image/svg+xml' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'cladograma_macrofitas.svg';
+    link.click();
+}
+
+// --- MODO ESCURO ---
+function toggleDarkMode() {
+    document.body.classList.toggle('dark-mode');
+    localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
+}
+try { if (localStorage.getItem('darkMode') === 'true') document.body.classList.add('dark-mode'); } catch(e) {}
+
+// --- RESETAR ZOOM ---
+function resetZoom() {
+    g.attr('transform', 'translate(50,50)');
+}
+
+function aplicarCuradoriaTemporal(pontosMapa) {
+    const set2005 = new Set();
+    const set2012 = new Set();
+    const pontos = Array.isArray(pontosMapa) ? pontosMapa : [];
+
+    for (const ponto of pontos) {
+        const ano = Number(ponto.ano || 0);
+        const lista = Array.isArray(ponto.lista_qualitativa_algas) ? ponto.lista_qualitativa_algas : [];
+        for (const taxon of lista) {
+            const key = normalizeTaxonKey(taxon);
+            if (!key) continue;
+            if (ano === 2005) set2005.add(key);
+            if (ano === 2012) set2012.add(key);
+        }
+    }
+
+    sharedSpeciesSet = new Set([...set2005].filter((x) => set2012.has(x)));
+    only2005SpeciesSet = new Set([...set2005].filter((x) => !set2012.has(x)));
+    only2012SpeciesSet = new Set([...set2012].filter((x) => !set2005.has(x)));
+}
+
+async function carregarDadosIntegrados() {
+    const respClado = await fetch('data/cladograma_hierarquia_publicacao.json');
+    const dadosClado = await respClado.json();
+    if (dadosClado && typeof dadosClado === 'object' && Array.isArray(dadosClado.children)) {
+        hierarchicalDataRuntime = normalizeAndMergeTree(dadosClado);
+        currentData = hierarchicalDataRuntime;
+    }
+
+    try {
+        const respMapa = await fetch('data/pontos_mapa.json');
+        const dadosMapa = await respMapa.json();
+        aplicarCuradoriaTemporal(dadosMapa);
+    } catch (err) {
+        console.warn('Falha ao carregar pontos_mapa.json para curadoria temporal.', err);
+    }
+}
+
+// --- INICIALIZAÇÃO ---
+(async function init() {
+    try {
+        await carregarDadosIntegrados();
+    } catch (err) {
+        console.error('Falha ao carregar data/cladograma_hierarquia_publicacao.json', err);
+    }
+    montarBotoesFiltro();
+    montarBotoesTemporais();
+    applyAllFiltersAndRender();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cladograma Interativo (Simples): Macrófitas Marinhas das Baias da Ilha de Santa Catarina</title>
+  <script src="https://cdn.plot.ly/plotly-3.2.0.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      color: #1a1a1a;
+    }
+
+    .wrap {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    h1 {
+      margin: 0;
+      text-align: center;
+      font-size: 30px;
+    }
+
+    .sub {
+      text-align: center;
+      color: #555;
+      margin: 6px 0 10px;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+
+    .topbar a,
+    .topbar button {
+      border: 1px solid #d0d0d0;
+      border-radius: 6px;
+      padding: 8px 12px;
+      background: #fff;
+      color: #1a1a1a;
+      text-decoration: none;
+      font: inherit;
+      cursor: pointer;
+    }
+
+    #chart {
+      width: 100%;
+      height: 800px;
+      background: #fff;
+      border: 1px solid #d0d0d0;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .legend {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin: 8px 0 12px;
+      font-size: 13px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border: 1px solid #d0d0d0;
+      border-radius: 999px;
+      background: #fff;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .error {
+      color: #b91c1c;
+      padding: 14px;
+    }
+
+    .didatic-panel {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(140px, 1fr));
+      gap: 8px;
+      margin: 0 auto 12px;
+      max-width: 980px;
+    }
+
+    .didatic-item {
+      border: 1px solid #d0d0d0;
+      border-radius: 8px;
+      background: #fff;
+      padding: 8px 10px;
+      text-align: center;
+      font-size: 12px;
+    }
+
+    .didatic-value {
+      display: block;
+      margin-top: 3px;
+      font-size: 16px;
+      font-weight: 700;
+      color: #1f3a8a;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Cladograma Interativo (Simples)</h1>
+    <div class="sub">Macrófitas Marinhas das Baias da Ilha de Santa Catarina</div>
+
+    <div class="topbar">
+      <button id="resetChart">Resetar visualização</button>
+      <button id="backLevel" disabled>Voltar nível</button>
+      <a href="index.html">Voltar ao portal</a>
+    </div>
+
+    <div class="legend">
+      <div class="legend-item"><span class="dot" style="background:#e63946"></span>Rhodophyta</div>
+      <div class="legend-item"><span class="dot" style="background:#2a9d8f"></span>Chlorophyta</div>
+      <div class="legend-item"><span class="dot" style="background:#f1a208"></span>Ochrophyta</div>
+      <div class="legend-item"><span class="dot" style="background:#a8dadc"></span>Magnoliophyta</div>
+    </div>
+
+    <div class="didatic-panel">
+      <div class="didatic-item">Raiz da hierarquia<span id="infoRoot" class="didatic-value">-</span></div>
+      <div class="didatic-item">Filos no dataset<span id="infoTopPhyla" class="didatic-value">-</span></div>
+      <div class="didatic-item">Riqueza total (folhas)<span id="infoLeafRichness" class="didatic-value">-</span></div>
+    </div>
+
+    <div id="chart"></div>
+  </div>
+
+  <script>
+    const colorScale = {
+      Rhodophyta: '#e63946',
+      Chlorophyta: '#2a9d8f',
+      Ochrophyta: '#f1a208',
+      Phaeophyceae: '#f6c453',
+      Magnoliophyta: '#a8dadc'
+    };
+
+    function normalizeName(name) {
+      return name === 'Heterokontophyta' ? 'Ochrophyta' : name;
+    }
+
+    function normalizeTree(node) {
+      return {
+        name: normalizeName(node.name || 'Sem nome'),
+        children: Array.isArray(node.children) ? node.children.map(normalizeTree) : []
+      };
+    }
+
+    function mergeTreeByName(node) {
+      const children = Array.isArray(node.children) ? node.children : [];
+      if (!children.length) return { ...node, children: [] };
+
+      const grouped = new Map();
+      for (const child of children) {
+        const mergedChild = mergeTreeByName(child);
+        const key = mergedChild.name || 'Sem nome';
+        if (!grouped.has(key)) {
+          grouped.set(key, mergedChild);
+          continue;
+        }
+        const prev = grouped.get(key);
+        grouped.set(key, {
+          name: key,
+          children: [...(prev.children || []), ...(mergedChild.children || [])]
+        });
+      }
+
+      return {
+        ...node,
+        children: [...grouped.values()].map((c) => mergeTreeByName(c))
+      };
+    }
+
+    function countLeaves(node) {
+      if (!node.children || !node.children.length) return 1;
+      return node.children.reduce((sum, c) => sum + countLeaves(c), 0);
+    }
+
+    function flattenSunburst(node, parentId, depth, arr) {
+      const id = parentId ? `${parentId}/${node.name}` : node.name;
+      const value = countLeaves(node);
+      arr.push({
+        id,
+        label: node.name,
+        parent: parentId,
+        depth,
+        value
+      });
+
+      (node.children || []).forEach((c) => flattenSunburst(c, id, depth + 1, arr));
+    }
+
+    function getTopFilo(id) {
+      const parts = id.split('/');
+      return parts[0] === 'Macrofitas ISC' ? (parts[1] || parts[0]) : parts[0];
+    }
+
+    async function drawChart() {
+      const chart = document.getElementById('chart');
+      const backButton = document.getElementById('backLevel');
+      const resp = await fetch('data/cladograma_hierarquia_publicacao.json');
+      const raw = await resp.json();
+      const data = mergeTreeByName(normalizeTree(raw));
+      document.getElementById('infoRoot').textContent = data.name || 'Macrofitas ISC';
+      document.getElementById('infoTopPhyla').textContent = Array.isArray(data.children) ? data.children.length : 0;
+
+      const nodes = [];
+      flattenSunburst(data, '', 0, nodes);
+      document.getElementById('infoLeafRichness').textContent = countLeaves(data);
+
+      const filtered = nodes.filter((n) => n.id !== 'Macrofitas ISC');
+      const ids = filtered.map((n) => n.id);
+      const labels = filtered.map((n) => n.label);
+      const parents = filtered.map((n) => n.parent === 'Macrofitas ISC' ? '' : n.parent);
+      const values = filtered.map((n) => n.value);
+      const colors = filtered.map((n) => colorScale[getTopFilo(n.id)] || '#9aa4b2');
+
+      const baseTrace = {
+        type: 'sunburst',
+        ids,
+        labels,
+        parents,
+        values,
+        branchvalues: 'total',
+        marker: { colors },
+        maxdepth: 6,
+        hovertemplate: '<b>%{label}</b><br>Nível: %{currentPath}<extra></extra>'
+      };
+
+      const baseLayout = {
+        title: {
+          text: 'Hierarquia Taxonômica Integrada (2005-2012): Macrófitas da Ilha de Santa Catarina',
+          x: 0.5,
+          xanchor: 'center',
+          font: { size: 24 }
+        },
+        margin: { t: 60, l: 0, r: 0, b: 40 },
+        font: { size: 16 },
+        annotations: [
+          {
+            text: 'Clique nos segmentos para abrir/fechar a hierarquia. Use o menu do Plotly para baixar como imagem.',
+            x: 0.5,
+            y: -0.08,
+            xref: 'paper',
+            yref: 'paper',
+            showarrow: false,
+            font: { size: 14, color: '#666' }
+          }
+        ]
+      };
+
+      let currentLevel = '';
+
+      function applyLevel(levelId) {
+        currentLevel = levelId || '';
+        Plotly.restyle(chart, { level: [currentLevel] });
+        backButton.disabled = currentLevel === '';
+      }
+
+      await Plotly.newPlot(
+        chart,
+        [baseTrace],
+        baseLayout,
+        { responsive: true }
+      );
+
+      chart.on('plotly_sunburstclick', (evt) => {
+        const id = evt && evt.points && evt.points[0] ? evt.points[0].id : '';
+        if (id) {
+          currentLevel = id;
+          backButton.disabled = false;
+        }
+      });
+
+      backButton.onclick = () => {
+        if (!currentLevel) return;
+        const parts = currentLevel.split('/');
+        if (parts.length <= 1) {
+          applyLevel('');
+          return;
+        }
+        parts.pop();
+        const parent = parts.join('/');
+        applyLevel(parent === 'Macrofitas ISC' ? '' : parent);
+      };
+
+      document.getElementById('resetChart').onclick = () => {
+        applyLevel('');
+      };
+    }
+
+    drawChart().catch((err) => {
+      console.error(err);
+      document.getElementById('chart').innerHTML = '<div class="error">Falha ao carregar data/cladograma_hierarquia_publicacao.json</div>';
+    });
+  </script>
+</body>
+</html>
