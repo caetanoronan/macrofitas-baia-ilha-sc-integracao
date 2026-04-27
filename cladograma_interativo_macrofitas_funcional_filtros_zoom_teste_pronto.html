@@ -68,7 +68,7 @@
         <button class="btn" onclick="exportSVG()">📥 Exportar SVG</button>
     </div>
     <div class="stats">
-        <div class="stat-box"><div class="stat-number" id="statTotal">0</div><div class="stat-label">Espécies</div></div>
+        <div class="stat-box"><div class="stat-number" id="statTotal">0</div><div class="stat-label">Táxons</div></div>
         <div class="stat-box"><div class="stat-number" id="statPhyla">0</div><div class="stat-label">Filos</div></div>
         <div class="stat-box"><div class="stat-number" id="statClass">0</div><div class="stat-label">Classes</div></div>
         <div class="stat-box"><div class="stat-number" id="statFamily">0</div><div class="stat-label">Famílias</div></div>
@@ -80,15 +80,17 @@
             <div class="info-title">ℹ️ Informações</div>
             <div class="info-item" style="margin-bottom:18px; color:#2a9d8f; font-size:14px;">
                 Clique em qualquer nó (bolinha) para ver detalhes sobre esse táxon.<br>
-                A visualização mostra a hierarquia: <b>Filo → Classe → Ordem → Família → Gênero</b>
+                A visualização mostra a hierarquia: <b>Filo → Classe → Ordem → Família → Gênero</b><br>
+                Referência metodológica: Batista (2012) reporta 163 espécies; a curadoria técnica pode incluir morfotáxons/entradas "sp." na composição táxon-a-táxon.
             </div>
             <div id="nodeInfo"></div>
         </div>
     </div>
 </div>
 <div class="tooltip" id="tooltip" style="display:none"></div>
+<script src="data/curadoria_temporal_embutida.js"></script>
 <script>
-const hierarchicalData = {"name":"Macrófitas ISC","children":[{"name":"Rhodophyta","children":[{"name":"Florideophyceae","children":[{"name":"Ceramiales","children":[{"name":"Rhodomelaceae","children":[{"name":"Acanthophora","children":[{"name":"Acanthophoraspicifera"}]},{"name":"Anotrichium","children":[{"name":"Anotrichiumyagii"}]},{"name":"Asparagopsis","children":[{"name":"Asparagopsistaxiformis"}]},{"name":"Bostrychia","children":[{"name":"Bostrychiamoritziana"},{"name":"Bostrychiaradicans"},{"name":"Bostrychiatenella"}]},{"name":"Bryocladia","children":[{"name":"Bryocladiathyrsigera"}]},{"name":"Bryothamnion","children":[{"name":"Bryothamnionseaforthii"}]},{"name":"Chondria","children":[{"name":"Chondriapolyrhiza"}]},{"name":"Dipterosiphonia","children":[{"name":"Dipterosiphoniadendritica"},{"name":"Dipterosiphoniarigens"}]},{"name":"Herposiphonia","children":[{"name":"Herposiphoniasecunda"},{"name":"Herposiphoniatenella"}]},{"name":"Heterosiphonia","children":[{"name":"Heterosiphoniacrispella"}]},{"name":"Laurencia","children":[{"name":"Laurenciacatarinensis"},{"name":"Laurenciadendroidea"},{"name":"Laurenciasp."}]},{"name":"Neosiphonia","children":[{"name":"Neosiphoniaferulacea"},{"name":"Neosiphoniaflaccidissima"},{"name":"Neosiphoniahowei"},{"name":"Neosiphoniasphaerocarpa"},{"name":"Neosiphoniatepida"}]},{"name":"Ophidocladus","children":[{"name":"Ophidocladussimpliciusculus"}]},{"name":"Palisada","children":[{"name":"Palisadaflagellifera"}]},{"name":"Polysiphonia","children":[{"name":"Polysiphoniascopulorum"},{"name":"Polysiphoniasertularioides"},{"name":"Polysiphoniastricta"},{"name":"Polysiphoniasubtilissima"}]},{"name":"Pterosiphonia","children":[{"name":"Pterosiphoniaparasitica"},{"name":"Pterosiphoniaparasiticavar. australis"},{"name":"Pterosiphoniapennata"}]}]},{"name":"Callithamniaceae","children":[{"name":"Aglaothamnion","children":[{"name":"Aglaothamnionfelipponei"},{"name":"Aglaothamnionuruguayense"}]},{"name":"Callithamnion","children":[{"name":"Callithamniontetragonum"}]},{"name":"Ptilothamnion","children":[{"name":"Ptilothamnionspeluncarum"}]}]},{"name":"Delesseriaceae","children":[{"name":"Caloglossa","children":[{"name":"Caloglossaleprieurii"}]},{"name":"Cryptopleura","children":[{"name":"Cryptopleuraramosa"}]}]},{"name":"Ceramiaceae","children":[{"name":"Centroceras","children":[{"name":"Centrocerasclavulatum"}]},{"name":"Ceramium","children":[{"name":"Ceramiumbrasiliense"},{"name":"Ceramiumdawsonii"},{"name":"Ceramiumdeslongchampsii"},{"name":"Ceramiumtenerrimum"}]}]},{"name":"Dasyaceae","children":[{"name":"Dasya","children":[{"name":"Dasyarigidula"}]}]},{"name":"Spyridiaceae","children":[{"name":"Spyridia","children":[{"name":"Spyridiafilamentosa"},{"name":"Spyridiahypnoides"}]}]}]},{"name":"Acrochaetiales","children":[{"name":"Acrochaetiaceae","children":[{"name":"Acrochaetium","children":[{"name":"Acrochaetiumglobosum"},{"name":"Acrochaetiummicroscopicum"},{"name":"Acrochaetiumsp."}]},{"name":"Colaconema","children":[{"name":"Colaconemacodicola"}]}]}]},{"name":"Stylonematales","children":[{"name":"Stylonemataceae","children":[{"name":"Stylonema","children":[{"name":"Stylonemaalsidii"}]}]}]},{"name":"Erythropeltidales","children":[{"name":"Erythrotrichiaceae","children":[{"name":"Erythrotrichia","children":[{"name":"Erythrotrichiacarnea"}]},{"name":"Sahlingia","children":[{"name":"Sahlingiasubintegra"}]}]}]},{"name":"Corallinales","children":[{"name":"Hapalidiaceae","children":[{"name":"Amphiroa","children":[{"name":"Amphiroafragilissima"},{"name":"Amphiroabeauvoisii"}]}]},{"name":"Corallinaceae","children":[{"name":"Arthrocardia","children":[{"name":"Arthrocardiavariabilis"}]},{"name":"Corallina","children":[{"name":"Corallinaofficinalis"}]},{"name":"Jania","children":[{"name":"Janiaadhaerens"},{"name":"Janiacapillacea"},{"name":"Janiacrassa"},{"name":"Janiasagittata"},{"name":"Janiasp.1"},{"name":"Janiasp.2"}]}]}]},{"name":"Gelidiales","children":[{"name":"Gelidiaceae","children":[{"name":"Gelidium","children":[{"name":"Gelidiumcrinale"},{"name":"Gelidiumfloridanum"},{"name":"Gelidiumsp.1"},{"name":"Gelidiumsp2"},{"name":"Gelidiumpusillum"}]}]},{"name":"Gelidiellaceae","children":[{"name":"Pterocladiella","children":[{"name":"Pterocladiellacapillacea"}]}]},{"name":"Lomentariaceae","children":[{"name":"Ceratodictyon","children":[{"name":"Ceratodictyonvariabile"}]}]}]},{"name":"Gigartinales","children":[{"name":"Gigartinaceae","children":[{"name":"Chondracanthus","children":[{"name":"Chondracanthusacicularis"},{"name":"Chondracanthussaundersii"},{"name":"Chondracanthusteedei"}]}]},{"name":"Phyllophoraceae","children":[{"name":"Gymnogongrus","children":[{"name":"Gymnogongrusgriffithsiae"}]}]},{"name":"Cystocloniaceae","children":[{"name":"Hypnea","children":[{"name":"Hypneacenomyce"},{"name":"Hypneacervicornis"},{"name":"Hypneamusciformis"},{"name":"Hypneanigrescens"},{"name":"Hypneaspinella"},{"name":"Hypneasp."}]}]}]},{"name":"Gracilariales","children":[{"name":"Gracilariaceae","children":[{"name":"Gracilaria","children":[{"name":"Gracilariasp."},{"name":"Gracilariatepocensis"},{"name":"Gracilariadomingensis"}]},{"name":"Hydropuntia","children":[{"name":"Hydropuntiacaudata"}]}]}]},{"name":"Halymeniales","children":[{"name":"Halymeniaceae","children":[{"name":"Grateloupia","children":[{"name":"Grateloupiacuneifolia"}]},{"name":"Halymenia","children":[{"name":"Halymeniafloridana"},{"name":"Halymeniasp.1"},{"name":"Halymeniasp.2"}]}]}]},{"name":"Hildenbrandiales","children":[{"name":"Hildenbrandiaceae","children":[{"name":"Hildenbrandia","children":[{"name":"Hildenbrandiarubra"}]}]}]},{"name":"Nemaliales","children":[{"name":"Liagoraceae","children":[{"name":"Nemalion","children":[{"name":"Nemalionhelminthoides"}]}]}]},{"name":"Bonnemaisoniales","children":[{"name":"Bonnemaisoniaceae","children":[{"name":"Asparagopsis","children":[{"name":"Asparagopsistaxiformis"}]}]}]},{"name":"Plocamiales","children":[{"name":"Plocamiaceae","children":[{"name":"Plocamium","children":[{"name":"Plocamiumbrasiliense"}]}]}]},{"name":"Rhodymeniales","children":[{"name":"Rhodymeniaceae","children":[{"name":"Rhodymenia","children":[{"name":"Rhodymeniapseudopalmata"}]}]},{"name":"Champiaceae","children":[{"name":"Champia","children":[{"name":"Champiaparvula"}]}]}]}]},{"name":"Bangiophyceae","children":[{"name":"Bangiales","children":[{"name":"Bangiaceae","children":[{"name":"Bangia","children":[{"name":"Bangiafuscopurpurea"}]},{"name":"Pyropia","children":[{"name":"Pyropiaacanthophora"},{"name":"Pyropiasp."},{"name":"Pyropiaspiralis"}]}]}]}]}]},{"name":"Heterokontophyta","children":[{"name":"Phaeophyceae","children":[{"name":"Ectocarpales","children":[{"name":"Acinetosporaceae","children":[{"name":"Asterocladon","children":[{"name":"Asterocladonrhodochortonoides"}]},{"name":"Asteronema","children":[{"name":"Asteronemabreviarticulatum"}]},{"name":"Feldmannia","children":[{"name":"Feldmanniairregularis"}]},{"name":"Hincksia","children":[{"name":"Hincksiamitchelliae"},{"name":"Hincksiasp."}]}]},{"name":"Ectocarpaceae","children":[{"name":"Bachelotia","children":[{"name":"Bachelotiaantillarum"}]},{"name":"Ectocarpus","children":[{"name":"Ectocarpussp."}]}]},{"name":"Chordariaceae","children":[{"name":"Levringia","children":[{"name":"Levringiabrasiliensis"}]}]},{"name":"Scytosiphonaceae","children":[{"name":"Chnoospora","children":[{"name":"Chnoosporaminima"}]},{"name":"Colpomenia","children":[{"name":"Colpomeniasinuosa"}]},{"name":"Petalonia","children":[{"name":"Petaloniafascia"},{"name":"Petaloniasp."}]},{"name":"Rosenvingea","children":[{"name":"Rosenvingeaorientalis"}]},{"name":"Scytosiphon","children":[{"name":"Scytosiphonlomentaria"}]}]}]},{"name":"Dictyotales","children":[{"name":"Dictyotaceae","children":[{"name":"Canistrocarpus","children":[{"name":"Canistrocarpuscervicornis"}]},{"name":"Dictyopteris","children":[{"name":"Dictyopterisdelicatula"}]},{"name":"Dictyota","children":[{"name":"Dictyotaciliolata"},{"name":"Dictyotamenstrualis"},{"name":"Dictyotasp."}]},{"name":"Padina","children":[{"name":"Padinagymnospora"},{"name":"Padinasp."}]}]}]},{"name":"Fucales","children":[{"name":"Sargassaceae","children":[{"name":"Sargassum","children":[{"name":"Sargassumfilipendula"},{"name":"Sargassumcymosum"},{"name":"Sargassumcymosumvar. nanum"},{"name":"Sargassumfurcatum"},{"name":"Sargassumsp."},{"name":"Sargassumstenophyllum"},{"name":"Sargassumvulgare"},{"name":"Sargassumvulgarevar. foliosissimum"}]}]}]},{"name":"Sphacelariales","children":[{"name":"Sphacelariaceae","children":[{"name":"Sphacelaria","children":[{"name":"Sphacelariabrachygona"},{"name":"Sphacelariarigidula"},{"name":"Sphacelariasp."},{"name":"Sphacelariatribuloides"}]}]}]},{"name":"Ralfsiales","children":[{"name":"Ralfsiaceae","children":[{"name":"Neoralfsia","children":[{"name":"Neoralfsiaexpansa"}]}]}]}]}]},{"name":"Chlorophyta","children":[{"name":"Ulvophyceae","children":[{"name":"Ulvales","children":[{"name":"Gayraliaceae","children":[{"name":"Gayralia","children":[{"name":"Gayraliaoxysperma"}]}]},{"name":"Gomontiaceae","children":[{"name":"Blidingia","children":[{"name":"Blidingiamarginata"}]}]},{"name":"Ulvaceae","children":[{"name":"Ulva","children":[{"name":"Ulvaclathrata"},{"name":"Ulvachaetomorphoides"},{"name":"Ulvafasciata"},{"name":"Ulvaflexuosa"},{"name":"Ulvalactuca"},{"name":"Ulvalinza"},{"name":"Ulvaprolifera"},{"name":"Ulvarigida"}]}]}]},{"name":"Cladophorales","children":[{"name":"Cladophoraceae","children":[{"name":"Chaetomorpha","children":[{"name":"Chaetomorphaaerea"},{"name":"Chaetomorphaantennina"}]},{"name":"Cladophora","children":[{"name":"Cladophoraalbida"},{"name":"Cladophoracatenata"},{"name":"Cladophoracoelothrix"},{"name":"Cladophoracorallicola"},{"name":"Cladophoracrispata"},{"name":"Cladophoraprolifera"},{"name":"Cladophorasp."},{"name":"Cladophoravagabunda"}]},{"name":"Rhizoclonium","children":[{"name":"Rhizocloniumafricanum"},{"name":"Rhizocloniumriparium"}]}]}]},{"name":"Siphonocladales","children":[{"name":"Boodleaceae","children":[{"name":"Cladophoropsis","children":[{"name":"Cladophoropsismembranacea"}]}]}]},{"name":"Bryopsidales","children":[{"name":"Bryopsidaceae","children":[{"name":"Bryopsis","children":[{"name":"Bryopsishypnoides"},{"name":"Bryopsispennata"},{"name":"Bryopsisplumosa"}]}]},{"name":"Codiaceae","children":[{"name":"Codium","children":[{"name":"Codiumdecorticatum"},{"name":"Codiumintertextum"},{"name":"Codiumisthmocladum"},{"name":"Codiumtaylorii"}]}]},{"name":"Caulerpaceae","children":[{"name":"Caulerpa","children":[{"name":"Caulerpafastigiata"}]}]}]},{"name":"Dasycladales","children":[{"name":"Polyphysaceae","children":[{"name":"Acetabularia","children":[{"name":"Acetabulariacalyculus"}]}]}]}]}]},{"name":"Magnoliophyta","children":[{"name":"Liliopsida","children":[{"name":"Alismatales","children":[{"name":"Ruppiaceae","children":[{"name":"Ruppia","children":[{"name":"Ruppiamaritima"}]}]},{"name":"Cymodoceaceae","children":[{"name":"Halodule","children":[{"name":"Halodulewrightii"}]}]}]}]}]}]};
+const hierarchicalData = {"name":"Macrofitas ISC","children":[{"name":"Chlorophyta","children":[{"name":"Ulvophyceae","children":[{"name":"Bryopsidales","children":[{"name":"Bryopsidaceae","children":[{"name":"Bryopsis","children":[{"name":"Bryopsis hypnoides","children":[]},{"name":"Bryopsis pennata","children":[]},{"name":"Bryopsis plumosa","children":[]}]}]},{"name":"Caulerpaceae","children":[{"name":"Caulerpa","children":[{"name":"Caulerpa fastigiata","children":[]}]}]},{"name":"Codiaceae","children":[{"name":"Codium","children":[{"name":"Codium decorticatum","children":[]},{"name":"Codium intertextum","children":[]},{"name":"Codium isthmocladum","children":[]},{"name":"Codium taylorii","children":[]}]}]}]},{"name":"Cladophorales","children":[{"name":"Cladophoraceae","children":[{"name":"Chaetomorpha","children":[{"name":"Chaetomorpha aerea","children":[]},{"name":"Chaetomorpha antennina","children":[]},{"name":"Chaetomorpha gracilis","children":[]}]},{"name":"Cladophora","children":[{"name":"Cladophora albida","children":[]},{"name":"Cladophora catenata","children":[]},{"name":"Cladophora coelothrix","children":[]},{"name":"Cladophora corallicola","children":[]},{"name":"Cladophora crispata","children":[]},{"name":"Cladophora prolifera","children":[]},{"name":"Cladophora sp.","children":[]},{"name":"Cladophora vagabunda","children":[]}]},{"name":"Rhizoclonium","children":[{"name":"Rhizoclonium africanum","children":[]},{"name":"Rhizoclonium riparium","children":[]}]}]}]},{"name":"Dasycladales","children":[{"name":"Polyphysaceae","children":[{"name":"Acetabularia","children":[{"name":"Acetabularia calyculus","children":[]}]}]}]},{"name":"Siphonocladales","children":[{"name":"Boodleaceae","children":[{"name":"Cladophoropsis","children":[{"name":"Cladophoropsis membranacea","children":[]},{"name":"Cladophoropsis membrenacea","children":[]}]}]}]},{"name":"Ulvales","children":[{"name":"Gayraliaceae","children":[{"name":"Gayralia","children":[{"name":"Gayralia oxysperma","children":[]}]}]},{"name":"Gomontiaceae","children":[{"name":"Blidingia","children":[{"name":"Blidingia marginata","children":[]}]}]},{"name":"Ulvaceae","children":[{"name":"Ulva","children":[{"name":"Ulva chaetomorphoides","children":[]},{"name":"Ulva clathrata","children":[]},{"name":"Ulva fasciata","children":[]},{"name":"Ulva flexuosa","children":[]},{"name":"Ulva lactuca","children":[]},{"name":"Ulva lingulata","children":[]},{"name":"Ulva linza","children":[]},{"name":"Ulva prolifera","children":[]},{"name":"Ulva rigida","children":[]}]}]}]}]},{"name":"Verdes","children":[{"name":"Ordem nao definida","children":[{"name":"Familia nao definida","children":[{"name":"Bryopsis","children":[{"name":"Bryopsis sp.","children":[]}]}]}]}]}]},{"name":"Heterokontophyta","children":[{"name":"Phaeophyceae","children":[{"name":"Dictyotales","children":[{"name":"Dictyotaceae","children":[{"name":"Canistrocarpus","children":[{"name":"Canistrocarpus cervicornis","children":[]}]},{"name":"Dictyopteris","children":[{"name":"Dictyopteris delicatula","children":[]}]},{"name":"Dictyota","children":[{"name":"Dictyota ciliolata","children":[]},{"name":"Dictyota menstrualis","children":[]},{"name":"Dictyota sp.","children":[]}]},{"name":"Padina","children":[{"name":"Padina gymnospora","children":[]},{"name":"Padina sp.","children":[]}]}]}]},{"name":"Ectocarpales","children":[{"name":"Acinetosporaceae","children":[{"name":"Asterocladon","children":[{"name":"Asterocladon rhodochortonoides","children":[]}]},{"name":"Asteronema","children":[{"name":"Asteronema breviarticulatum","children":[]},{"name":"Asteronema breviarticulatus","children":[]}]},{"name":"Feldmannia","children":[{"name":"Feldmannia irregularis","children":[]}]},{"name":"Hincksia","children":[{"name":"Hincksia mitchelliae","children":[]},{"name":"Hincksia sp.","children":[]}]}]},{"name":"Chordariaceae","children":[{"name":"Levringia","children":[{"name":"Levringia brasiliensis","children":[]}]}]},{"name":"Ectocarpaceae","children":[{"name":"Bachelotia","children":[{"name":"Bachelotia antillarum","children":[]}]},{"name":"Ectocarpus","children":[{"name":"Ectocarpus sp.","children":[]}]}]},{"name":"Scytosiphonaceae","children":[{"name":"Chnoospora","children":[{"name":"Chnoospora minima","children":[]}]},{"name":"Colpomenia","children":[{"name":"Colpomenia sinuosa","children":[]}]},{"name":"Petalonia","children":[{"name":"Petalonia fascia","children":[]},{"name":"Petalonia sp.","children":[]}]},{"name":"Rosenvingea","children":[{"name":"Rosenvingea orientalis","children":[]}]},{"name":"Scytosiphon","children":[{"name":"Scytosiphon lomentaria","children":[]}]}]}]},{"name":"Fucales","children":[{"name":"Sargassaceae","children":[{"name":"Sargassum","children":[{"name":"Saragassum filipendula","children":[]},{"name":"Sargassum cymosum","children":[]},{"name":"Sargassum cymosum var. nanum","children":[]},{"name":"Sargassum filipendula","children":[]},{"name":"Sargassum furcatum","children":[]},{"name":"Sargassum sp.","children":[]},{"name":"Sargassum stenophyllum","children":[]},{"name":"Sargassum stenophylum","children":[]},{"name":"Sargassum vulgare","children":[]},{"name":"Sargassum vulgare var. foliosissimum","children":[]}]}]}]},{"name":"Ralfsiales","children":[{"name":"Ralfsiaceae","children":[{"name":"Neoralfsia","children":[{"name":"Neoralfsia expansa","children":[]}]}]}]},{"name":"Sphacelariales","children":[{"name":"Sphacelariaceae","children":[{"name":"Sphacelaria","children":[{"name":"Sphacelaria brachygona","children":[]},{"name":"Sphacelaria rigidula","children":[]},{"name":"Sphacelaria sp.","children":[]},{"name":"Sphacelaria tribuloides","children":[]}]}]}]}]}]},{"name":"Magnoliophyta","children":[{"name":"Liliopsida","children":[{"name":"Alismatales","children":[{"name":"Cymodoceaceae","children":[{"name":"Halodule","children":[{"name":"Halodule wrightii","children":[]}]}]},{"name":"Ruppiaceae","children":[{"name":"Ruppia","children":[{"name":"Ruppia maritima","children":[]}]}]}]}]}]},{"name":"Nao informado","children":[{"name":"Nao informado","children":[{"name":"Nao informado","children":[{"name":"Nao informado","children":[{"name":"A.","children":[{"name":"A. fragilissima","children":[]},{"name":"A. gardneri","children":[]}]},{"name":"C.","children":[{"name":"C. luetzelburgii","children":[]},{"name":"C. sp.","children":[]},{"name":"C. teedei","children":[]},{"name":"C. vagabunda","children":[]}]},{"name":"Cianofitas","children":[{"name":"Cianofitas","children":[]}]},{"name":"D.","children":[{"name":"D. menstrualis","children":[]}]},{"name":"G.","children":[{"name":"G. floridanum","children":[]},{"name":"G. pusillum","children":[]}]},{"name":"S.","children":[{"name":"S. stenophylum","children":[]},{"name":"S. tribuloides","children":[]},{"name":"S. vulgare","children":[]}]}]}]}]}]},{"name":"Ochrophyta","children":[{"name":"Phaeophyceae","children":[{"name":"Dictyotales","children":[{"name":"Dictyotaceae","children":[{"name":"Dictyota","children":[{"name":"Dictyota cervicornis","children":[]}]}]}]},{"name":"Sphacelariales","children":[{"name":"Sphacelariaceae","children":[{"name":"Sphacelaria","children":[{"name":"Sphacelaria brachygonia","children":[]}]}]}]}]}]},{"name":"Rhodophyta","children":[{"name":"Bangiophyceae","children":[{"name":"Bangiales","children":[{"name":"Bangiaceae","children":[{"name":"Bangia","children":[{"name":"Bangia fuscopurpurea","children":[]}]},{"name":"Pyropia","children":[{"name":"Pyropia acanthophora","children":[]},{"name":"Pyropia sp.","children":[]},{"name":"Pyropia sp iralis","children":[]}]}]}]}]},{"name":"Florideophyceae","children":[{"name":"Acrochaetiales","children":[{"name":"Acrochaetiaceae","children":[{"name":"Acrochaetium","children":[{"name":"Acrochaetium globosum","children":[]},{"name":"Acrochaetium microscopicum","children":[]},{"name":"Acrochaetium sp.","children":[]}]},{"name":"Colaconema","children":[{"name":"Colaconema codico la","children":[]}]}]}]},{"name":"Ceramiales","children":[{"name":"Callithamniaceae","children":[{"name":"Aglaothamnion","children":[{"name":"Aglaothamnion felipponei","children":[]},{"name":"Aglaothamnion uruguayense","children":[]}]},{"name":"Callithamnion","children":[{"name":"Callithamnion tetragonum","children":[]}]},{"name":"Ptilothamnion","children":[{"name":"Ptilothamnion speluncarum","children":[]}]}]},{"name":"Ceramiaceae","children":[{"name":"Centroceras","children":[{"name":"Centroceras clavulatum","children":[]}]},{"name":"Ceramium","children":[{"name":"Ceramium brasiliense","children":[]},{"name":"Ceramium dawsonii","children":[]},{"name":"Ceramium deslongchampsii","children":[]},{"name":"Ceramium tenerrimum","children":[]}]}]},{"name":"Dasyaceae","children":[{"name":"Dasya","children":[{"name":"Dasya rigidula","children":[]}]}]},{"name":"Delesseriaceae","children":[{"name":"Caloglossa","children":[{"name":"Caloglossa leprieurii","children":[]}]},{"name":"Cryptopleura","children":[{"name":"Cryptopleura ramosa","children":[]}]}]},{"name":"Rhodomelaceae","children":[{"name":"Acanthophora","children":[{"name":"Acanthophora spicifera","children":[]}]},{"name":"Anotrichium","children":[{"name":"Anotrichium yagii","children":[]}]},{"name":"Asparagopsis","children":[{"name":"Asparagopsis taxiformis","children":[]}]},{"name":"Bostrychia","children":[{"name":"Bostrychia moritziana","children":[]},{"name":"Bostrychia radicans","children":[]},{"name":"Bostrychia tenella","children":[]}]},{"name":"Bryocladia","children":[{"name":"Bryocladia thyrsigera","children":[]}]},{"name":"Bryothamniom","children":[{"name":"Bryothamniom seaforthii","children":[]}]},{"name":"Bryothamnion","children":[{"name":"Bryothamnion seaforthii","children":[]}]},{"name":"Chondria","children":[{"name":"Chondria polyrhiza","children":[]}]},{"name":"Dipterosiphonia","children":[{"name":"Dipterosiphonia dendr itica","children":[]},{"name":"Dipterosiphonia rigens","children":[]}]},{"name":"Herposiphonia","children":[{"name":"Herposiphonia secunda","children":[]},{"name":"Herposiphonia tenella","children":[]}]},{"name":"Heterosiphonia","children":[{"name":"Heterosiphonia crispella","children":[]}]},{"name":"Laurencia","children":[{"name":"Laurencia catarinens is","children":[]},{"name":"Laurencia dendroidea","children":[]},{"name":"Laurencia flagellifera","children":[]},{"name":"Laurencia obtusa","children":[]},{"name":"Laurencia sp.","children":[]}]},{"name":"Neosiphonia","children":[{"name":"Neosiphon ia tepida","children":[]},{"name":"Neosiphonia ferulace a","children":[]},{"name":"Neosiphonia flaccidissima","children":[]},{"name":"Neosiphonia howei","children":[]},{"name":"Neosiphonia sphaerocarpa","children":[]}]},{"name":"Ophidocladus","children":[{"name":"Ophidocladus simpliciusculus","children":[]}]},{"name":"Palisada","children":[{"name":"Palisada flagellifera","children":[]}]},{"name":"Polysiphonia","children":[{"name":"Polysiphonia scopulorum","children":[]},{"name":"Polysiphonia sertularioides","children":[]},{"name":"Polysiphonia stricta","children":[]},{"name":"Polysiphonia subtilissima","children":[]}]},{"name":"Pterosiphonia","children":[{"name":"Pterosiphoni a pennata","children":[]},{"name":"Pterosiphonia parasitica","children":[]},{"name":"Pterosiphonia parasitica var. australis","children":[]}]}]},{"name":"Spyridiaceae","children":[{"name":"Spyridia","children":[{"name":"Spyridi a hypnoides","children":[]},{"name":"Spyridia filamentosa","children":[]}]}]},{"name":"Wrangeliaceae","children":[{"name":"Pleonosporium","children":[{"name":"Pleonosporium polystichum","children":[]}]}]}]},{"name":"Corallinales","children":[{"name":"Corallinaceae","children":[{"name":"Arthrocardia","children":[{"name":"Arthrocardia flabelata","children":[]},{"name":"Arthrocardia sp.","children":[]},{"name":"Arthrocardia variabilis","children":[]}]},{"name":"Corallina","children":[{"name":"Corallina officinalis","children":[]}]},{"name":"Jania","children":[{"name":"Jania adhaerens","children":[]},{"name":"Jania capillacea","children":[]},{"name":"Jania crassa","children":[]},{"name":"Jania rubens","children":[]},{"name":"Jania sagittata","children":[]},{"name":"Jania sp.1","children":[]},{"name":"Jania sp.2","children":[]}]}]},{"name":"Hapalidiaceae","children":[{"name":"Amphiroa","children":[{"name":"Amphiroa beauvoisii","children":[]},{"name":"Amphiroa fragilissima","children":[]}]}]}]},{"name":"Erythropeltidales","children":[{"name":"Erythrotrichiaceae","children":[{"name":"Erythrotrichia","children":[{"name":"Erythrotrichia carnea","children":[]}]},{"name":"Sahlingia","children":[{"name":"Sahlingia subintegra","children":[]}]}]}]},{"name":"Gelidiales","children":[{"name":"Gelidiaceae","children":[{"name":"Gelidium","children":[{"name":"Gelidium crinale","children":[]},{"name":"Gelidium flori danum","children":[]},{"name":"Gelidium pusillum","children":[]},{"name":"Gelidium sp.1","children":[]},{"name":"Gelidium sp2","children":[]}]}]},{"name":"Gelidiellaceae","children":[{"name":"Gelidiella","children":[{"name":"Gelidiella trinitatensis","children":[]}]},{"name":"Pterocladiella","children":[{"name":"Pterocladiella capillacea","children":[]}]}]},{"name":"Lomentariaceae","children":[{"name":"Ceratodictyon","children":[{"name":"Ceratodictyon variabile","children":[]}]}]}]},{"name":"Gigartinales","children":[{"name":"Cystocloniaceae","children":[{"name":"Hypnea","children":[{"name":"Hypnea cenomyce","children":[]},{"name":"Hypnea cervicornis","children":[]},{"name":"Hypnea musciformis","children":[]},{"name":"Hypnea nigrescens","children":[]},{"name":"Hypnea sp.","children":[]},{"name":"Hypnea spinella","children":[]}]}]},{"name":"Gigartinaceae","children":[{"name":"Chondracanthus","children":[{"name":"Chondracanthus acicularis","children":[]},{"name":"Chondracanthus saundersii","children":[]},{"name":"Chondracanthus teedei","children":[]}]}]},{"name":"Phyllophoraceae","children":[{"name":"Gymnogongrus","children":[{"name":"Gymnogongrus griffithsiae","children":[]}]}]}]},{"name":"Gracilariales","children":[{"name":"Gracilariaceae","children":[{"name":"Gracilaria","children":[{"name":"Gracilaria domingensis","children":[]},{"name":"Gracilaria sp.","children":[]},{"name":"Gracilaria tepocensis","children":[]}]},{"name":"Hydropuntia","children":[{"name":"Hydropuntia caudata","children":[]}]}]}]},{"name":"Halymeniales","children":[{"name":"Halymeniaceae","children":[{"name":"Grateloupia","children":[{"name":"Grateloupia cuneifolia","children":[]}]},{"name":"Halymenia","children":[{"name":"Halymenia floridana","children":[]},{"name":"Halymenia sp.1","children":[]},{"name":"Halymenia sp.2","children":[]}]}]}]},{"name":"Hildenbrandiales","children":[{"name":"Hildenbrandiaceae","children":[{"name":"Hildenbrandia","children":[{"name":"Hildenbrandia rubra","children":[]}]}]}]},{"name":"Nemaliales","children":[{"name":"Galaxauraceae","children":[{"name":"Galaxaura","children":[{"name":"Galaxaura marginata","children":[]}]}]},{"name":"Liagoraceae","children":[{"name":"Nemalion","children":[{"name":"Nemalion helminthoides","children":[]}]}]}]},{"name":"Plocamiales","children":[{"name":"Plocamiaceae","children":[{"name":"Plocamium","children":[{"name":"Plocamium brasiliense","children":[]}]}]}]},{"name":"Rhodymeniales","children":[{"name":"Champiaceae","children":[{"name":"Champia","children":[{"name":"Champia parvula","children":[]}]}]},{"name":"Lomentariaceae","children":[{"name":"Gelidiopsis","children":[{"name":"Gelidiopsis variabilis","children":[]}]}]},{"name":"Rhodymeniaceae","children":[{"name":"Rhodymenia","children":[{"name":"Rhodymenia pseudopalmata","children":[]}]}]}]},{"name":"Stylonematales","children":[{"name":"Stylonemataceae","children":[{"name":"Stylonema","children":[{"name":"Stylonema alsidii","children":[]}]}]}]}]}]}]};
 const colorScale = {
     'Rhodophyta': '#e63946',
     'Heterokontophyta': '#f1a208',
@@ -169,6 +171,8 @@ function normalizeAndMergeTree(node) {
 let sharedSpeciesSet = new Set();
 let only2005SpeciesSet = new Set();
 let only2012SpeciesSet = new Set();
+let species2005Set = new Set();
+let species2012Set = new Set();
 let activeTemporalMode = 'all';
 let activeFiloMode = '';
 const FALLBACK_SHARED_KEYS = `acanthophora spicifera|amphiroa beauvoisii|amphiroa fragilissima|asparagopsis taxiformis|bachelotia antillarum|bostrychia radicans|centroceras clavulatum|ceramium brasiliense|chaetomorpha antennina|chondracanthus acicularis|chondria polyrhiza|cladophora albida|cladophora prolifera|cladophora sp|cladophora vagabunda|codium decorticatum|codium taylorii|colpomenia sinuosa|dictyopteris delicatula|gelidium crinale|gymnogongrus griffithsiae|herposiphonia secunda|hincksia mitchelliae|hypnea musciformis|jania adhaerens|padina gymnospora|sargassum vulgare|spyridia filamentosa|ulva fasciata|ulva flexuosa|ulva lactuca|ulva linza`.split('|');
@@ -176,9 +180,156 @@ const FALLBACK_ONLY2005_KEYS = `a fragilissima|a gardneri|arthrocardia flabelata
 const FALLBACK_ONLY2012_KEYS = `acetabularia calyculus|acrochaetium globosum|acrochaetium microscopicum|acrochaetium sp|aglaothamnion felipponei|aglaothamnion uruguayense|anotrichium yagii|arthrocardia variabilis|asterocladon rhodochortonoides|asteronema breviarticulatum|bangia fuscopurpurea|blidingia marginata|bostrychia moritziana|bostrychia tenella|bryocladia thyrsigera|bryopsis hypnoides|bryopsis pennata|bryopsis plumosa|bryothamnion seaforthii|callithamnion tetragonum|caloglossa leprieurii|canistrocarpus cervicornis|caulerpa fastigiata|ceramium dawsonii|ceramium deslongchampsii|ceramium tenerrimum|ceratodictyon variabile|chaetomorpha aerea|champia parvula|chnoospora minima|chondracanthus saundersii|chondracanthus teedei|cladophora catenata|cladophora coelothrix|cladophora corallicola|cladophora crispata|cladophoropsis membranacea|codium intertextum|codium isthmocladum|colaconema codico la|corallina officinalis|cryptopleura ramosa|dasya rigidula|dictyota ciliolata|dictyota menstrualis|dictyota sp|dipterosiphonia dendr itica|dipterosiphonia rigens|ectocarpus sp|erythrotrichia carnea|feldmannia irregularis|gayralia oxysperma|gelidium flori danum|gelidium pusillum|gelidium sp 1|gelidium sp2|gracilaria domingensis|gracilaria sp|gracilaria tepocensis|grateloupia cuneifolia|halodule wrightii|halymenia floridana|halymenia sp 1|halymenia sp 2|herposiphonia tenella|heterosiphonia crispella|hildenbrandia rubra|hincksia sp|hydropuntia caudata|hypnea cenomyce|hypnea cervicornis|hypnea nigrescens|hypnea sp|hypnea spinella|jania capillacea|jania crassa|jania sagittata|jania sp 1|jania sp 2|laurencia catarinens is|laurencia dendroidea|laurencia sp|levringia brasiliensis|nemalion helminthoides|neoralfsia expansa|neosiphon ia tepida|neosiphonia ferulace a|neosiphonia flaccidissima|neosiphonia howei|neosiphonia sphaerocarpa|ophidocladus simpliciusculus|padina sp|palisada flagellifera|petalonia fascia|petalonia sp|plocamium brasiliense|polysiphonia scopulorum|polysiphonia sertularioides|polysiphonia stricta|polysiphonia subtilissima|pterocladiella capillacea|pterosiphoni a pennata|pterosiphonia parasitica|pterosiphonia parasitica var australis|ptilothamnion speluncarum|pyropia acanthophora|pyropia sp|pyropia sp iralis|rhizoclonium africanum|rhizoclonium riparium|rhodymenia pseudopalmata|rosenvingea orientalis|ruppia maritima|sahlingia subintegra|saragassum filipendula|sargassum cymosum|sargassum cymosum var nanum|sargassum furcatum|sargassum sp|sargassum stenophyllum|sargassum vulgare var foliosissimum|scytosiphon lomentaria|sphacelaria brachygona|sphacelaria rigidula|sphacelaria sp|sphacelaria tribuloides|spyridi a hypnoides|stylonema alsidii|ulva chaetomorphoides|ulva clathrata|ulva prolifera|ulva rigida`.split('|');
 
 function aplicarCuradoriaTemporalFallback() {
-    sharedSpeciesSet = new Set(FALLBACK_SHARED_KEYS.map(normalizeTaxonKey).filter(Boolean));
-    only2005SpeciesSet = new Set(FALLBACK_ONLY2005_KEYS.map(normalizeTaxonKey).filter(Boolean));
-    only2012SpeciesSet = new Set(FALLBACK_ONLY2012_KEYS.map(normalizeTaxonKey).filter(Boolean));
+    const set2005 = new Set([
+        ...FALLBACK_SHARED_KEYS.map(normalizeTaxonKey).filter(Boolean),
+        ...FALLBACK_ONLY2005_KEYS.map(normalizeTaxonKey).filter(Boolean),
+    ]);
+    const set2012 = new Set([
+        ...FALLBACK_SHARED_KEYS.map(normalizeTaxonKey).filter(Boolean),
+        ...FALLBACK_ONLY2012_KEYS.map(normalizeTaxonKey).filter(Boolean),
+    ]);
+    aplicarCuradoriaTemporalSets(set2005, set2012);
+}
+
+function aplicarCuradoriaTemporalSets(set2005, set2012) {
+    species2005Set = new Set(set2005 || []);
+    species2012Set = new Set(set2012 || []);
+    sharedSpeciesSet = new Set([...species2005Set].filter((x) => species2012Set.has(x)));
+    only2005SpeciesSet = new Set([...species2005Set].filter((x) => !species2012Set.has(x)));
+    only2012SpeciesSet = new Set([...species2012Set].filter((x) => !species2005Set.has(x)));
+}
+
+function aplicarCuradoriaTemporalEmbutida() {
+    const embedded = window.CURADORIA_TEMPORAL_EMBUTIDA;
+    if (!embedded || !Array.isArray(embedded.set2005) || !Array.isArray(embedded.set2012)) {
+        return false;
+    }
+    const set2005 = new Set(embedded.set2005.map(String).filter(Boolean));
+    const set2012 = new Set(embedded.set2012.map(String).filter(Boolean));
+    aplicarCuradoriaTemporalSets(set2005, set2012);
+    return true;
+}
+
+function collectLeafKeys(node, out = new Set()) {
+    const children = Array.isArray(node.children) ? node.children : [];
+    if (!children.length) {
+        out.add(normalizeTaxonKey(node.name));
+        return out;
+    }
+    for (const child of children) collectLeafKeys(child, out);
+    return out;
+}
+
+function buildLeafGroupMap(node, group = '', out = new Map()) {
+    const children = Array.isArray(node.children) ? node.children : [];
+    const nextGroup = normalizeFiloName(node.name) || group;
+    if (!children.length) {
+        out.set(normalizeTaxonKey(node.name), group || nextGroup || 'Nao informado');
+        return out;
+    }
+    for (const child of children) {
+        const childGroup = (node.name === 'Macrofitas ISC') ? normalizeFiloName(child.name) : (group || nextGroup);
+        buildLeafGroupMap(child, childGroup, out);
+    }
+    return out;
+}
+
+function pruneTreeByAllowedKeys(node, allowedKeys) {
+    const children = Array.isArray(node.children) ? node.children : [];
+    if (!children.length) {
+        return allowedKeys.has(normalizeTaxonKey(node.name)) ? { ...node, children: [] } : null;
+    }
+    const kept = children
+        .map((child) => pruneTreeByAllowedKeys(child, allowedKeys))
+        .filter(Boolean);
+    if (!kept.length) return null;
+    return { ...node, children: kept };
+}
+
+function ensureChildNode(parent, childName) {
+    if (!Array.isArray(parent.children)) parent.children = [];
+    const existing = parent.children.find((c) => c.name === childName);
+    if (existing) return existing;
+    const created = { name: childName, children: [] };
+    parent.children.push(created);
+    return created;
+}
+
+function ensurePath(root, segments) {
+    let cursor = root;
+    for (const segment of segments) {
+        cursor = ensureChildNode(cursor, segment);
+    }
+    return cursor;
+}
+
+function normalizeGroupForTree(groupHint) {
+    const g = String(groupHint || '').trim();
+    if (g === 'Heterokontophyta') return 'Ochrophyta';
+    if (g === 'Phaeophyceae') return 'Ochrophyta';
+    if (g === 'Rhodophyta' || g === 'Chlorophyta' || g === 'Magnoliophyta') return g;
+    return 'Nao informado';
+}
+
+function defaultClassForPhylum(phylum) {
+    if (phylum === 'Rhodophyta') return 'Florideophyceae';
+    if (phylum === 'Chlorophyta') return 'Ulvophyceae';
+    if (phylum === 'Ochrophyta') return 'Phaeophyceae';
+    if (phylum === 'Magnoliophyta') return 'Liliopsida';
+    return 'Nao informado';
+}
+
+function addSpeciesToTree(root, speciesName, groupHint) {
+    const cleanedName = normalizeTaxonName(speciesName || '').trim();
+    if (!cleanedName) return;
+    const phylum = normalizeGroupForTree(groupHint);
+    const className = defaultClassForPhylum(phylum);
+    const genus = cleanedName.split(/\s+/)[0] || 'Nao informado';
+    const family = 'Familia nao definida';
+    const order = 'Ordem nao definida';
+    const genusNode = ensurePath(root, [phylum, className, order, family, genus]);
+    ensureChildNode(genusNode, cleanedName);
+}
+
+function reconcileRuntimeTreeWithTemporalCuradoria() {
+    const allowed = new Set([...species2005Set, ...species2012Set]);
+    if (!allowed.size) return;
+
+    const groupMapBefore = buildLeafGroupMap(hierarchicalDataRuntime);
+    const embedded = window.CURADORIA_TEMPORAL_EMBUTIDA || {};
+    const keyToName = new Map();
+    const keyToGroup = new Map();
+
+    const rows2005 = Array.isArray(embedded.rows2005) ? embedded.rows2005 : [];
+    for (const row of rows2005) {
+        const key = String(row.key || '').trim();
+        if (!key) continue;
+        if (!keyToName.has(key)) keyToName.set(key, normalizeTaxonName(row.name || ''));
+        if (!keyToGroup.has(key)) keyToGroup.set(key, row.group || '');
+    }
+    const rows2012 = Array.isArray(embedded.rows2012)
+        ? embedded.rows2012
+        : (Array.isArray(embedded.names2012) ? embedded.names2012 : []);
+    for (const row of rows2012) {
+        const key = String(row.key || '').trim();
+        if (!key) continue;
+        if (!keyToName.has(key)) keyToName.set(key, normalizeTaxonName(row.name || ''));
+        if (!keyToGroup.has(key)) keyToGroup.set(key, groupMapBefore.get(key) || '');
+    }
+
+    const pruned = pruneTreeByAllowedKeys(hierarchicalDataRuntime, allowed);
+    hierarchicalDataRuntime = pruned || { name: 'Macrofitas ISC', children: [] };
+
+    const present = collectLeafKeys(hierarchicalDataRuntime);
+    for (const key of allowed) {
+        if (present.has(key)) continue;
+        const name = keyToName.get(key) || key;
+        const group = keyToGroup.get(key) || groupMapBefore.get(key) || 'Nao informado';
+        addSpeciesToTree(hierarchicalDataRuntime, name, group);
+    }
+
+    hierarchicalDataRuntime = normalizeAndMergeTree(hierarchicalDataRuntime);
+    currentData = hierarchicalDataRuntime;
 }
 
 function getSpeciesStatus(speciesName) {
@@ -263,11 +414,12 @@ function setTemporalMode(mode) {
 
 function montarBotoesTemporais() {
     temporalBtnsDiv.html('');
+    const contagens = contarFolhasPorStatus(hierarchicalDataRuntime);
     const opcoes = [
-        { mode: 'all', label: 'Todos' },
-        { mode: 'shared', label: 'Compartilhadas' },
-        { mode: 'only2005', label: 'Somente 2005' },
-        { mode: 'only2012', label: 'Somente 2012' }
+        { mode: 'all', label: `Todos (${contagens.all})` },
+        { mode: 'shared', label: `Compartilhadas (${contagens.shared})` },
+        { mode: 'only2005', label: `Somente 2005 (${contagens.only2005})` },
+        { mode: 'only2012', label: `Somente 2012 (${contagens.only2012})` }
     ];
 
     opcoes.forEach((opt) => {
@@ -283,6 +435,25 @@ function montarBotoesTemporais() {
     });
 
     setTemporalMode('all');
+}
+
+function contarFolhasPorStatus(node) {
+    const out = { all: 0, shared: 0, only2005: 0, only2012: 0, none: 0 };
+    function walk(n) {
+        const children = Array.isArray(n.children) ? n.children : [];
+        if (!children.length) {
+            out.all += 1;
+            const status = getSpeciesStatus(n.name);
+            if (status === 'shared') out.shared += 1;
+            else if (status === 'only2005') out.only2005 += 1;
+            else if (status === 'only2012') out.only2012 += 1;
+            else out.none += 1;
+            return;
+        }
+        for (const c of children) walk(c);
+    }
+    walk(node);
+    return out;
 }
 
 // --- FUNÇÕES DE ESTATÍSTICAS ---
@@ -455,8 +626,9 @@ function resetZoom() {
     g.attr('transform', 'translate(50,50)');
 }
 
-function aplicarCuradoriaTemporal(pontosMapa) {
-    const set2005 = new Set();
+function aplicarCuradoriaTemporal2012(pontosMapa) {
+    // Mantem 2005 da curadoria Bouzon (107) e atualiza apenas 2012 quando disponivel.
+    const set2005 = new Set(species2005Set);
     const set2012 = new Set();
     const pontos = Array.isArray(pontosMapa) ? pontosMapa : [];
 
@@ -466,36 +638,48 @@ function aplicarCuradoriaTemporal(pontosMapa) {
         for (const taxon of lista) {
             const key = normalizeTaxonKey(taxon);
             if (!key) continue;
-            if (ano === 2005) set2005.add(key);
             if (ano === 2012) set2012.add(key);
         }
     }
-
-    sharedSpeciesSet = new Set([...set2005].filter((x) => set2012.has(x)));
-    only2005SpeciesSet = new Set([...set2005].filter((x) => !set2012.has(x)));
-    only2012SpeciesSet = new Set([...set2012].filter((x) => !set2005.has(x)));
+    aplicarCuradoriaTemporalSets(set2005, set2012);
 }
 
 async function carregarDadosIntegrados() {
-    const respClado = await fetch('data/cladograma_hierarquia_publicacao.json');
-    const dadosClado = await respClado.json();
-    if (dadosClado && typeof dadosClado === 'object' && Array.isArray(dadosClado.children)) {
-        hierarchicalDataRuntime = normalizeAndMergeTree(dadosClado);
-        currentData = hierarchicalDataRuntime;
+    // Fonte principal: curadoria temporal embutida (2005 = 107 taxons curados).
+    const hasEmbeddedCuradoria = aplicarCuradoriaTemporalEmbutida();
+    if (!hasEmbeddedCuradoria) {
+        aplicarCuradoriaTemporalFallback();
+    }
+    reconcileRuntimeTreeWithTemporalCuradoria();
+
+    // Em file:// alguns navegadores bloqueiam fetch para arquivos locais.
+    // Mantemos a experiência funcional com dados embutidos.
+    if (window.location.protocol === 'file:') {
+        return;
     }
 
     try {
-        const respMapa = await fetch('data/pontos_mapa.json');
-        const dadosMapa = await respMapa.json();
-        aplicarCuradoriaTemporal(dadosMapa);
+        const respClado = await fetch('data/cladograma_hierarquia_publicacao.json');
+        const dadosClado = await respClado.json();
+        if (dadosClado && typeof dadosClado === 'object' && Array.isArray(dadosClado.children)) {
+            hierarchicalDataRuntime = normalizeAndMergeTree(dadosClado);
+            currentData = hierarchicalDataRuntime;
+            reconcileRuntimeTreeWithTemporalCuradoria();
+        }
     } catch (err) {
-        console.warn('Falha ao carregar pontos_mapa.json para curadoria temporal.', err);
+        console.warn('Falha ao carregar cladograma_hierarquia_publicacao.json; usando dados embutidos.', err);
     }
 
-    const totalCuradoria = sharedSpeciesSet.size + only2005SpeciesSet.size + only2012SpeciesSet.size;
-    if (totalCuradoria === 0) {
-        console.warn('Curadoria temporal via fallback embutido (sem fetch de pontos_mapa.json).');
-        aplicarCuradoriaTemporalFallback();
+    // Quando em http/https, atualiza apenas 2012 via pontos_mapa.
+    if (hasEmbeddedCuradoria) {
+        try {
+            const respMapa = await fetch('data/pontos_mapa.json');
+            const dadosMapa = await respMapa.json();
+            aplicarCuradoriaTemporal2012(dadosMapa);
+            reconcileRuntimeTreeWithTemporalCuradoria();
+        } catch (err) {
+            console.warn('Falha ao atualizar conjunto 2012 via pontos_mapa.json; mantendo curadoria embutida.', err);
+        }
     }
 }
 

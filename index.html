@@ -392,7 +392,7 @@
     <div class="stats">
             <div class="stat-item">
                 <div class="stat-number" id="statEspecies">0</div>
-                <div class="stat-label">Espécies</div>
+                <div class="stat-label">Táxons (união 2005+2012)</div>
             </div>
             <div class="stat-item">
                 <div class="stat-number" id="statFilos">0</div>
@@ -412,7 +412,7 @@
         <h2>📈 Série Temporal de Riqueza (2005-2012)</h2>
         <div class="temporal-chart-wrap">
             <svg id="temporalSeriesChart" class="temporal-chart" viewBox="0 0 800 220" role="img" aria-label="Série temporal de táxons 2005 e 2012"></svg>
-            <p class="temporal-caption">Totais reportados nas dissertações: Bouzon (2005) = 107 táxons; Batista (2012) = 163 espécies.</p>
+            <p class="temporal-caption">Totais reportados nas dissertações: Bouzon (2005) = 107 táxons; Batista (2012) = 163 espécies. Neste portal, a comparação temporal é padronizada em riqueza de táxons (campo <code>riqueza_taxons</code>) para 2005 e 2012.</p>
         </div>
     </div>
 
@@ -534,6 +534,7 @@
     </div>
 </div>
 
+<script src="data/curadoria_temporal_embutida.js"></script>
 <script>
 async function carregarMetricasIntegradas() {
     const [resMapa, resClado] = await Promise.all([
@@ -549,18 +550,50 @@ async function carregarMetricasIntegradas() {
     const classes = new Set();
     let especies = 0;
 
-    function walk(node, depth) {
+    function normalizeRankName(name) {
+        const v = String(name || '').trim().toLowerCase();
+        if (!v) return '';
+        if (v === 'heterokontophyta' || v === 'ochrophyta' || v === 'phaeophyceae') return 'Ochrophyta';
+        if (v === 'chlorophyta' || v === 'verdes') return 'Chlorophyta';
+        if (v === 'rhodophyta') return 'Rhodophyta';
+        if (v === 'magnoliophyta' || v === 'liliopsida') return 'Magnoliophyta';
+        if (v === 'nao informado' || v === 'não informado') return '';
+        return String(name || '').trim();
+    }
+
+    function walk(node, depth, parentName) {
         if (!node) return;
-        if (depth === 1) filos.add(node.name);
-        if (depth === 2) classes.add(node.name);
+        if (depth === 1) {
+            const filo = normalizeRankName(node.name);
+            if (filo) filos.add(filo);
+        }
+        if (depth === 2) {
+            const classeRaw = String(node.name || '').trim();
+            const classeKey = classeRaw.toLowerCase();
+            if (classeKey && classeKey !== 'verdes' && classeKey !== 'nao informado' && classeKey !== 'não informado') {
+                classes.add(classeRaw);
+            }
+            if (String(parentName || '').toLowerCase() === 'heterokontophyta' || String(parentName || '').toLowerCase() === 'ochrophyta') {
+                classes.add('Phaeophyceae');
+            }
+        }
         if (!node.children || node.children.length === 0) {
             especies += 1;
             return;
         }
-        node.children.forEach((c) => walk(c, depth + 1));
+        node.children.forEach((c) => walk(c, depth + 1, node.name));
     }
 
-    walk(clado, 0);
+    walk(clado, 0, '');
+
+    const embedded = window.CURADORIA_TEMPORAL_EMBUTIDA;
+    if (embedded && Array.isArray(embedded.set2005) && Array.isArray(embedded.set2012)) {
+        const union = new Set([
+            ...embedded.set2005.map((x) => String(x).trim()).filter(Boolean),
+            ...embedded.set2012.map((x) => String(x).trim()).filter(Boolean)
+        ]);
+        if (union.size > 0) especies = union.size;
+    }
 
     document.getElementById('statEspecies').textContent = especies;
     document.getElementById('statFilos').textContent = filos.size;
@@ -613,7 +646,7 @@ function desenharSerieTemporal() {
     svg.insertAdjacentHTML('beforeend', `<text x="${x1}" y="${height - 12}" text-anchor="middle" font-size="12" fill="#334155">2012</text>`);
     svg.insertAdjacentHTML('beforeend', `<text x="${x0}" y="${y0 - 10}" text-anchor="middle" font-size="12" fill="#1d4ed8">107</text>`);
     svg.insertAdjacentHTML('beforeend', `<text x="${x1}" y="${y1 - 10}" text-anchor="middle" font-size="12" fill="#16a34a">163</text>`);
-    svg.insertAdjacentHTML('beforeend', `<text x="${margin.left}" y="${margin.top - 6}" text-anchor="start" font-size="12" fill="#334155">Táxons / espécies</text>`);
+    svg.insertAdjacentHTML('beforeend', `<text x="${margin.left}" y="${margin.top - 6}" text-anchor="start" font-size="12" fill="#334155">Riqueza de táxons (2005 e 2012)</text>`);
 }
 
 function toggleTheme() {
