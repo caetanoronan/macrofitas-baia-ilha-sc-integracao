@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard MVP - Macrófitas SC</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <style>
+        * { box-sizing: border-box; }
+
+        :root {
+            --primary: #0066cc;
+            --success: #2a9d8f;
+            --warning: #f1a208;
+            --danger: #e63946;
+            --bg: #f5f5f5;
+            --text: #1a1a1a;
+            --text-soft: #334155;
+            --text-muted: #4b5563;
+            --card: #ffffff;
+            --border: #d0d0d0;
+            --shadow: rgba(0, 0, 0, 0.1);
+            --header-bg: rgba(255,255,255,0.95);
+            --grid: #e2e8f0;
+            --chart-label: #334155;
+            --chart-tick: #475569;
+        }
+
+        body.dark-mode {
+            --bg: #1a1a1a;
+            --text: #e9ecef;
+            --text-soft: #dbe4ee;
+            --text-muted: #c8d3df;
+            --card: #2d3748;
+            --border: #5e6a78;
+            --shadow: rgba(0, 0, 0, 0.3);
+            --header-bg: rgba(26, 33, 44, 0.94);
+            --grid: #4b5563;
+            --chart-label: #e2e8f0;
+            --chart-tick: #cbd5e1;
+        }
+
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: var(--text);
+            transition: all 0.3s ease;
+            min-height: 100vh;
+        }
+
+        body.dark-mode {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--card);
+            color: var(--text);
+            border: 1px solid var(--border);
+            padding: 10px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            box-shadow: 0 2px 8px var(--shadow);
+            z-index: 100;
+        }
+
+        .page {
+            max-width: 1420px;
+            margin: 0 auto;
+            padding: 28px 20px 20px;
+        }
+
+        .header {
+            background: var(--header-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px 18px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            line-height: 1.2;
+        }
+
+        .header p {
+            margin: 8px 0 0;
+            color: var(--text-soft);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .toolbar {
+            margin-top: 12px;
+            display: grid;
+            grid-template-columns: repeat(4, minmax(180px, 1fr));
+            gap: 10px;
+        }
+
+        .field {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 8px 10px;
+        }
+
+        .field label {
+            display: block;
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .field select {
+            width: 100%;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 8px;
+            font-size: 14px;
+            background: var(--card);
+            color: var(--text);
+        }
+
+        .actions {
+            margin-top: 10px;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            border: 1px solid var(--border);
+            background: var(--card);
+            border-radius: 6px;
+            padding: 8px 12px;
+            text-decoration: none;
+            color: var(--text);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .kpis {
+            margin-top: 12px;
+            display: grid;
+            grid-template-columns: repeat(4, minmax(160px, 1fr));
+            gap: 10px;
+        }
+
+        .kpi {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+        }
+
+        .kpi .value {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--success);
+            line-height: 1.1;
+        }
+
+        .kpi .label {
+            margin-top: 4px;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .grid {
+            margin-top: 12px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .panel {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            min-height: 330px;
+        }
+
+        .panel h2 {
+            margin: 0 0 6px;
+            font-size: 16px;
+        }
+
+        .panel p.meta {
+            margin: 0 0 8px;
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+
+        .panel canvas {
+            width: 100% !important;
+            height: 245px !important;
+        }
+
+        .panel p.note {
+            margin: 8px 0 0;
+            font-size: 12px;
+            color: var(--text-muted);
+            line-height: 1.45;
+        }
+
+        .full { grid-column: 1 / -1; }
+
+        .legend-stations {
+            margin-top: 12px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+        }
+
+        .legend-stations h3 {
+            margin: 0 0 8px;
+            font-size: 15px;
+        }
+
+        .station-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(220px, 1fr));
+            gap: 6px 10px;
+            font-size: 12px;
+            color: var(--text-soft);
+        }
+
+        .footer {
+            margin-top: 12px;
+            font-size: 12px;
+            color: var(--text-muted);
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px 12px;
+            line-height: 1.45;
+        }
+
+        @media (max-width: 1100px) {
+            .toolbar { grid-template-columns: 1fr 1fr; }
+            .kpis { grid-template-columns: 1fr 1fr; }
+            .grid { grid-template-columns: 1fr; }
+            .station-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+<button class="theme-toggle" id="themeToggle">🌙</button>
+
+<div class="page">
+    <section class="header">
+        <h1>Dashboard MVP - Macrófitas (Bouzon 2005 + Batista 2012)</h1>
+        <p>
+            Painel para comparação temporal, espacial, taxonômica e qualidade da água. Referência oficial para Batista (2012): <b>163 espécies</b>.
+            Na integração analítica usamos <b>riqueza_taxons</b>, o que pode incluir morfotáxons/entradas <b>sp.</b>
+        </p>
+        <div class="toolbar">
+            <div class="field">
+                <label for="fAno">Ano</label>
+                <select id="fAno">
+                    <option value="all">Todos</option>
+                    <option value="2005">2005 (Bouzon)</option>
+                    <option value="2012">2012 (Batista)</option>
+                </select>
+            </div>
+            <div class="field">
+                <label for="fSetor">Setor</label>
+                <select id="fSetor">
+                    <option value="all">Todos</option>
+                    <option value="Norte">Norte</option>
+                    <option value="Sul">Sul</option>
+                    <option value="Leste">Leste</option>
+                    <option value="Oeste">Oeste</option>
+                </select>
+            </div>
+            <div class="field">
+                <label for="fTopN">Top N estações</label>
+                <select id="fTopN">
+                    <option value="10">10</option>
+                    <option value="15">15</option>
+                    <option value="20">20</option>
+                    <option value="33">Todas</option>
+                </select>
+            </div>
+            <div class="field">
+                <label for="fTipoTemporal">Série temporal</label>
+                <select id="fTipoTemporal">
+                    <option value="oficial">Oficial (107 vs 163 espécies)</option>
+                    <option value="curadoria">Curadoria (107 vs 164 táxons)</option>
+                </select>
+            </div>
+        </div>
+        <div class="actions">
+            <a class="btn" href="index.html">← Voltar ao Portal</a>
+            <button class="btn" id="btnReset" type="button">Resetar Filtros</button>
+        </div>
+    </section>
+
+    <section class="kpis">
+        <div class="kpi"><div class="value" id="kpiStations">0</div><div class="label">Estações no filtro</div></div>
+        <div class="kpi"><div class="value" id="kpiAvg">0</div><div class="label">Riqueza média (táxons)</div></div>
+        <div class="kpi"><div class="value" id="kpiMax">0</div><div class="label">Maior riqueza (táxons)</div></div>
+        <div class="kpi"><div class="value" id="kpiMin">0</div><div class="label">Menor riqueza (táxons)</div></div>
+    </section>
+
+    <section class="grid">
+        <article class="panel">
+            <h2>Série Temporal 2005-2012</h2>
+            <p class="meta">Compara totais de Bouzon (2005) e Batista (2012).</p>
+            <canvas id="chartTemporal"></canvas>
+            <p class="note">Leitura: no modo "Oficial" usa 163 espécies reportadas na dissertação da Batista; no modo "Curadoria" usa 164 táxons da integração técnica.</p>
+        </article>
+
+        <article class="panel">
+            <h2>Composição por Filo (Táxons únicos)</h2>
+            <p class="meta">Atribuição por filo via hierarquia taxonômica integrada.</p>
+            <canvas id="chartPhylum"></canvas>
+            <p class="note">Leitura: barras por ano mostram quantos táxons únicos de cada filo aparecem nos pontos filtrados.</p>
+        </article>
+
+        <article class="panel full">
+            <h2>Ranking de Riqueza por Estação</h2>
+            <p class="meta">Riqueza em táxons por ponto de coleta, respeitando filtros ativos.</p>
+            <canvas id="chartStations"></canvas>
+            <p class="note">Leitura: estações mais ricas ficam no topo; cores azul/verde indicam respectivamente 2005/2012.</p>
+        </article>
+
+        <article class="panel full">
+            <h2>Comparação Temporal - 6 Pontos Coincidentes</h2>
+            <p class="meta">Diferença direta entre 2005 e 2012 nas estações equivalentes.</p>
+            <canvas id="chartIntersec"></canvas>
+            <p class="note">Leitura: permite avaliar tendência local de ganho/perda de riqueza nos mesmos costões entre os dois estudos.</p>
+        </article>
+
+        <article class="panel full">
+            <h2>Qualidade da Água - Batista (2012)</h2>
+            <p class="meta">E. coli (NMP/100 ml) e condição de balneabilidade por ponto (dados da Tabela 4).</p>
+            <canvas id="chartWater"></canvas>
+            <p class="note">Leitura: cada barra representa um ponto de coleta em 2012. O eixo Y está em escala logarítmica para comparar valores baixos e extremos no mesmo gráfico. Barras em verde indicam balneabilidade própria (P) e barras em vermelho indicam imprópria (I). Valores muito elevados de E. coli (NMP/100 ml), como em SL e ST, indicam maior pressão antrópica por contaminação fecal no período amostrado.</p>
+        </article>
+
+        <article class="panel full">
+            <h2>Parâmetros Ambientais - Bouzon (2005)</h2>
+            <p class="meta">N-NH4 (µM) e PID (µM) por estação (Tabela 2 extraída em <code>bouzon_2005_parametros_agua.csv</code>).</p>
+            <canvas id="chartBouzonWater"></canvas>
+            <p class="note">Leitura: barras azuis mostram N-NH4 (µM) no eixo esquerdo e a linha amarela mostra PID (µM) no eixo direito. O N-NH4 funciona como indicador de aporte nitrogenado dissolvido e tende a aumentar em áreas sob maior influência de esgoto/urbanização. O PID indica disponibilidade de fósforo inorgânico dissolvido; sua interpretação deve ser conjunta com N-NH4, setorização e contexto hidrodinâmico de cada estação.</p>
+        </article>
+    </section>
+
+    <section class="legend-stations">
+        <h3>Legenda de Estações (sigla → local de coleta)</h3>
+        <div id="stationLegend" class="station-grid"></div>
+        <h3 style="margin-top:12px;">Legenda Ambiental</h3>
+        <div class="station-grid">
+            <div><b>N-NH4 (µM)</b> → nitrogênio amoniacal dissolvido.</div>
+            <div><b>PID (µM)</b> → fósforo inorgânico dissolvido.</div>
+            <div><b>E. coli (NMP/100 ml)</b> → indicador microbiológico de qualidade da água.</div>
+            <div><b>P</b> → balneabilidade própria.</div>
+            <div><b>I</b> → balneabilidade imprópria.</div>
+            <div><b>Escala log</b> → usada para comparar ordens de grandeza no mesmo eixo.</div>
+        </div>
+    </section>
+
+    <section class="footer">
+        <b>Autor:</b> Ronan Armando Caetano |
+        <b>Referências:</b> Bouzon, Janayna Lehmkuhl (2005) + Batista, Manuela B. (2012).<br>
+        Base cartográfica: OpenStreetMap Contributors. Visualização web: Leaflet 1.9.4 (CDNJS). Dashboard: Chart.js 4.4.3.
+    </section>
+</div>
+
+<script src="data/curadoria_temporal_embutida.js"></script>
+<script>
+let charts = {};
+let rawStations = [];
+let bouzonWater2005 = [];
+let leafPhylumMap = new Map();
+
+const INTERSEC_LABELS = {
+    PONTA_DAS_CANAS: 'Ponta das Canas',
+    SAMBAQUI: 'Sambaqui',
+    SACO_DOS_LIMOES: 'Saco dos Limões',
+    PONTA_DO_CORAL: 'Ponta do Coral',
+    RIBEIRAO_DA_ILHA: 'Ribeirão da Ilha',
+    CAIEIRA_DA_BARRA_DO_SUL: 'Caieira da Barra do Sul'
+};
+
+// Dados transcritos da Tabela 4 de Batista (2012)
+const BATISTA_WATER_2012 = [
+    { sigla: 'CN-2012', local: 'Ponta das Canas', ecoli: 20, ecoli_txt: '< 20', baln: 'P' },
+    { sigla: 'IG-2012', local: 'Ingleses', ecoli: 20, ecoli_txt: '< 20', baln: 'P' },
+    { sigla: 'FT-2012', local: 'Forte', ecoli: 40, ecoli_txt: '40', baln: 'P' },
+    { sigla: 'CV-2012', local: 'Canasvieiras', ecoli: 40, ecoli_txt: '40', baln: 'P' },
+    { sigla: 'DN-2012', local: 'Daniela', ecoli: 20, ecoli_txt: '< 20', baln: 'P' },
+    { sigla: 'RP-2012', local: 'Ponta do Rapa', ecoli: 80, ecoli_txt: '80', baln: 'P' },
+    { sigla: 'LN-2012', local: 'Lagoinha do Norte', ecoli: 130, ecoli_txt: '130', baln: 'P' },
+    { sigla: 'SB-2012', local: 'Sambaqui', ecoli: 20, ecoli_txt: '< 20', baln: 'P' },
+    { sigla: 'SL-2012', local: 'Saco dos Limões', ecoli: 16000, ecoli_txt: '16000', baln: 'I' },
+    { sigla: 'CS-2012', local: 'Caieira da Barra do Sul', ecoli: 200, ecoli_txt: '200', baln: 'P' },
+    { sigla: 'PC-2012', local: 'Ponta do Coral', ecoli: 5000, ecoli_txt: '5000', baln: 'I' },
+    { sigla: 'RI-2012', local: 'Ribeirão da Ilha', ecoli: 230, ecoli_txt: '230', baln: 'P' },
+    { sigla: 'ST-2012', local: 'Santo Antônio de Lisboa', ecoli: 16000, ecoli_txt: '16000', baln: 'I' },
+    { sigla: 'AM-2012', local: 'Armação', ecoli: 40, ecoli_txt: '40', baln: 'P' },
+    { sigla: 'BL-2012', local: 'Barra da Lagoa', ecoli: 20, ecoli_txt: '< 20', baln: 'P' },
+    { sigla: 'LC-2012', local: 'Lagoa da Conceição', ecoli: 300, ecoli_txt: '300', baln: 'P' },
+    { sigla: 'CL-2012', local: 'Canal da Barra da Lagoa', ecoli: 130, ecoli_txt: '130', baln: 'P' },
+    { sigla: 'GV-2012', local: 'Gravatá', ecoli: 20, ecoli_txt: '< 20', baln: 'P' },
+    { sigla: 'SQ-2012', local: 'Saquinho', ecoli: 40, ecoli_txt: '40', baln: 'P' },
+    { sigla: 'GT-2012', local: 'Galheta', ecoli: 20, ecoli_txt: '20', baln: 'P' },
+    { sigla: 'SA-2012', local: 'Santinho', ecoli: 20, ecoli_txt: '< 20', baln: 'P' }
+];
+
+function normalizeKey(value) {
+    return String(value || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '');
+}
+
+function normalizePhylum(name) {
+    const n = String(name || '').trim();
+    if (n === 'Heterokontophyta' || n === 'Phaeophyceae') return 'Ochrophyta';
+    if (n === 'Verdes') return 'Chlorophyta';
+    if (n === 'Nao informado' || n === 'Não informado') return '';
+    return n;
+}
+
+function normalizeTaxon(raw) {
+    const s = String(raw || '').trim();
+    if (!s) return '';
+    if (/^E\.\s+/i.test(s)) return `Ulva ${s.replace(/^E\.\s+/i, '').trim()}`;
+    if (/^Enteromorpha\s+/i.test(s)) return `Ulva ${s.replace(/^Enteromorpha\s+/i, '').trim()}`;
+    return s.replace(/\s{2,}/g, ' ');
+}
+
+function inferSetor(lat) {
+    if (lat <= -27.72) return 'Sul';
+    if (lat <= -27.57) return 'Leste';
+    if (lat <= -27.45) return 'Norte';
+    return 'Oeste';
+}
+
+function walkLeaves(node, topPhylum) {
+    if (!node) return;
+    const children = Array.isArray(node.children) ? node.children : [];
+    if (!children.length) {
+        const k = normalizeKey(normalizeTaxon(node.name));
+        if (k && topPhylum) leafPhylumMap.set(k, topPhylum);
+        return;
+    }
+    for (const child of children) walkLeaves(child, topPhylum);
+}
+
+function buildLeafPhylumMap(tree) {
+    leafPhylumMap.clear();
+    const roots = Array.isArray(tree.children) ? tree.children : [];
+    for (const ph of roots) {
+        const filo = normalizePhylum(ph.name);
+        if (!filo) continue;
+        walkLeaves(ph, filo);
+    }
+}
+
+function getFilters() {
+    return {
+        ano: document.getElementById('fAno').value,
+        setor: document.getElementById('fSetor').value,
+        topN: Number(document.getElementById('fTopN').value || 10),
+        temporalTipo: document.getElementById('fTipoTemporal').value
+    };
+}
+
+function applyFilters(rows, f) {
+    return rows.filter((r) => {
+        if (f.ano !== 'all' && String(r.ano) !== f.ano) return false;
+        if (f.setor !== 'all' && r.setor !== f.setor) return false;
+        return true;
+    });
+}
+
+function destroyChart(id) {
+    if (!charts[id]) return;
+    charts[id].destroy();
+    charts[id] = null;
+}
+
+function chartThemeOptions() {
+    const css = getComputedStyle(document.body);
+    const tick = css.getPropertyValue('--chart-tick').trim();
+    const label = css.getPropertyValue('--chart-label').trim();
+    const grid = css.getPropertyValue('--grid').trim();
+    return {
+        tickColor: tick,
+        labelColor: label,
+        gridColor: grid
+    };
+}
+
+function commonChartOptions(axisYBegin = true) {
+    const t = chartThemeOptions();
+    return {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: true,
+                labels: { color: t.labelColor, boxWidth: 14 }
+            }
+        },
+        scales: {
+            x: {
+                ticks: { color: t.tickColor },
+                grid: { color: t.gridColor }
+            },
+            y: {
+                beginAtZero: axisYBegin,
+                ticks: { color: t.tickColor },
+                grid: { color: t.gridColor }
+            }
+        }
+    };
+}
+
+function renderTemporalChart(tipo) {
+    const emb = window.CURADORIA_TEMPORAL_EMBUTIDA || {};
+    const v2005 = 107;
+    const v2012Official = 163;
+    const v2012Curadoria = Array.isArray(emb.set2012) ? emb.set2012.length : 164;
+    const isOficial = tipo === 'oficial';
+    const values = [v2005, isOficial ? v2012Official : v2012Curadoria];
+    const label = isOficial ? 'Espécies (fonte oficial)' : 'Táxons (curadoria)';
+    const colors = isOficial ? ['#2563eb', '#16a34a'] : ['#1d4ed8', '#0f766e'];
+
+    destroyChart('temporal');
+    charts.temporal = new Chart(document.getElementById('chartTemporal'), {
+        type: 'bar',
+        data: {
+            labels: ['2005', '2012'],
+            datasets: [{ label, data: values, backgroundColor: colors }]
+        },
+        options: commonChartOptions(true)
+    });
+}
+
+function renderPhylumChart(rows) {
+    const byYear = { 2005: {}, 2012: {} };
+    const ensure = (y, k) => { if (!byYear[y][k]) byYear[y][k] = new Set(); return byYear[y][k]; };
+
+    for (const r of rows) {
+        const y = Number(r.ano);
+        if (y !== 2005 && y !== 2012) continue;
+        for (const t of (r.lista_qualitativa_algas || [])) {
+            const k = normalizeKey(normalizeTaxon(t));
+            if (!k) continue;
+            const filo = leafPhylumMap.get(k) || 'Não classificado';
+            ensure(y, filo).add(k);
+        }
+    }
+
+    const filos = Array.from(new Set([
+        ...Object.keys(byYear[2005]),
+        ...Object.keys(byYear[2012])
+    ])).sort();
+
+    destroyChart('phylum');
+    charts.phylum = new Chart(document.getElementById('chartPhylum'), {
+        type: 'bar',
+        data: {
+            labels: filos,
+            datasets: [
+                {
+                    label: '2005',
+                    data: filos.map((f) => (byYear[2005][f] ? byYear[2005][f].size : 0)),
+                    backgroundColor: '#2563eb'
+                },
+                {
+                    label: '2012',
+                    data: filos.map((f) => (byYear[2012][f] ? byYear[2012][f].size : 0)),
+                    backgroundColor: '#16a34a'
+                }
+            ]
+        },
+        options: commonChartOptions(true)
+    });
+}
+
+function renderStationChart(rows, topN) {
+    const sorted = [...rows].sort((a, b) => Number(b.riqueza_taxons) - Number(a.riqueza_taxons));
+    const take = sorted.slice(0, topN);
+    const labels = take.map((r) => `${r.sigla} (${r.ano})`);
+    const values = take.map((r) => Number(r.riqueza_taxons || 0));
+    const colors = take.map((r) => Number(r.ano) === 2005 ? '#2563eb' : '#16a34a');
+
+    destroyChart('stations');
+    charts.stations = new Chart(document.getElementById('chartStations'), {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [{ label: 'Riqueza (táxons)', data: values, backgroundColor: colors }]
+        },
+        options: {
+            ...commonChartOptions(true),
+            indexAxis: 'y'
+        }
+    });
+}
+
+function renderIntersectionChart(rows) {
+    const byStd = {};
+    for (const r of rows) {
+        const std = String(r.estacao_padrao || '').trim();
+        if (!std || !INTERSEC_LABELS[std]) continue;
+        if (!byStd[std]) byStd[std] = {};
+        byStd[std][String(r.ano)] = Number(r.riqueza_taxons || 0);
+    }
+
+    const labels = Object.keys(INTERSEC_LABELS)
+        .filter((k) => byStd[k] && byStd[k]['2005'] !== undefined && byStd[k]['2012'] !== undefined)
+        .map((k) => INTERSEC_LABELS[k]);
+
+    const values2005 = labels.map((lbl) => {
+        const key = Object.keys(INTERSEC_LABELS).find((k) => INTERSEC_LABELS[k] === lbl);
+        return byStd[key]['2005'];
+    });
+    const values2012 = labels.map((lbl) => {
+        const key = Object.keys(INTERSEC_LABELS).find((k) => INTERSEC_LABELS[k] === lbl);
+        return byStd[key]['2012'];
+    });
+
+    destroyChart('intersec');
+    charts.intersec = new Chart(document.getElementById('chartIntersec'), {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [
+                { label: '2005', data: values2005, backgroundColor: '#2563eb' },
+                { label: '2012', data: values2012, backgroundColor: '#16a34a' }
+            ]
+        },
+        options: commonChartOptions(true)
+    });
+}
+
+function renderWaterChart(filters) {
+    let rows = [...BATISTA_WATER_2012];
+    if (filters.setor !== 'all') {
+        const bySigla = new Map(rawStations.map((s) => [String(s.sigla || ''), s]));
+        rows = rows.filter((w) => {
+            const st = bySigla.get(w.sigla);
+            return st && st.setor === filters.setor;
+        });
+    }
+    if (filters.ano === '2005') rows = [];
+
+    const labels = rows.map((r) => r.sigla.replace('-2012', ''));
+    const vals = rows.map((r) => r.ecoli);
+    const colors = rows.map((r) => (r.baln === 'I' ? '#e63946' : '#2a9d8f'));
+
+    destroyChart('water');
+    charts.water = new Chart(document.getElementById('chartWater'), {
+        type: 'bar',
+        data: {
+            labels: labels.length ? labels : ['Sem dados para o filtro'],
+            datasets: [{
+                label: 'E. coli (NMP/100 ml)',
+                data: labels.length ? vals : [0],
+                backgroundColor: labels.length ? colors : ['#64748b']
+            }]
+        },
+        options: {
+            ...commonChartOptions(true),
+            scales: {
+                ...commonChartOptions(true).scales,
+                y: {
+                    type: 'logarithmic',
+                    min: 10,
+                    ticks: { color: chartThemeOptions().tickColor },
+                    grid: { color: chartThemeOptions().gridColor }
+                }
+            }
+        }
+    });
+}
+
+function renderBouzonWaterChart(filters) {
+    let rows = [...bouzonWater2005];
+    if (filters.setor !== 'all') {
+        rows = rows.filter((r) => r.setor === filters.setor);
+    }
+    if (filters.ano === '2012') rows = [];
+
+    const labels = rows.length ? rows.map((r) => r.sigla_2005) : ['Sem dados para o filtro'];
+    const nh4 = rows.length ? rows.map((r) => Number(r.n_nh4_um || 0)) : [0];
+    const pid = rows.length ? rows.map((r) => Number(r.pid_um || 0)) : [0];
+
+    destroyChart('bouzonWater');
+    charts.bouzonWater = new Chart(document.getElementById('chartBouzonWater'), {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [
+                {
+                    type: 'bar',
+                    label: 'N-NH4 (µM)',
+                    data: nh4,
+                    yAxisID: 'yNh4',
+                    backgroundColor: '#0066cc'
+                },
+                {
+                    type: 'line',
+                    label: 'PID (µM)',
+                    data: pid,
+                    yAxisID: 'yPid',
+                    borderColor: '#f1a208',
+                    backgroundColor: '#f1a208',
+                    tension: 0.25,
+                    pointRadius: 4,
+                    pointHoverRadius: 5
+                }
+            ]
+        },
+        options: {
+            ...commonChartOptions(true),
+            scales: {
+                x: {
+                    ticks: { color: chartThemeOptions().tickColor },
+                    grid: { color: chartThemeOptions().gridColor }
+                },
+                yNh4: {
+                    type: 'linear',
+                    position: 'left',
+                    beginAtZero: true,
+                    ticks: { color: chartThemeOptions().tickColor },
+                    grid: { color: chartThemeOptions().gridColor },
+                    title: { display: true, text: 'N-NH4 (µM)', color: chartThemeOptions().labelColor }
+                },
+                yPid: {
+                    type: 'linear',
+                    position: 'right',
+                    beginAtZero: true,
+                    ticks: { color: chartThemeOptions().tickColor },
+                    grid: { drawOnChartArea: false },
+                    title: { display: true, text: 'PID (µM)', color: chartThemeOptions().labelColor }
+                }
+            }
+        }
+    });
+}
+
+function renderKpis(rows) {
+    const n = rows.length;
+    const richness = rows.map((r) => Number(r.riqueza_taxons || 0));
+    const avg = n ? Math.round(richness.reduce((a, b) => a + b, 0) / n) : 0;
+    const max = n ? Math.max(...richness) : 0;
+    const min = n ? Math.min(...richness) : 0;
+    document.getElementById('kpiStations').textContent = n;
+    document.getElementById('kpiAvg').textContent = avg;
+    document.getElementById('kpiMax').textContent = max;
+    document.getElementById('kpiMin').textContent = min;
+}
+
+function renderStationLegend(rows) {
+    const container = document.getElementById('stationLegend');
+    const unique = [...new Map(
+        rows
+            .map((r) => [String(r.sigla || ''), `${r.sigla} → ${r.descricao_local || r.localizacao || ''}`])
+            .filter((x) => x[0])
+    ).values()].sort();
+    container.innerHTML = unique.map((x) => `<div>${x}</div>`).join('');
+}
+
+function rerender() {
+    const filters = getFilters();
+    const rows = applyFilters(rawStations, filters);
+    renderKpis(rows);
+    renderTemporalChart(filters.temporalTipo);
+    renderPhylumChart(rows);
+    renderStationChart(rows, filters.topN);
+    renderIntersectionChart(rawStations);
+    renderWaterChart(filters);
+    renderBouzonWaterChart(filters);
+    renderStationLegend(rawStations);
+}
+
+function parseCsv(text) {
+    const lines = String(text || '').trim().split(/\r?\n/).filter(Boolean);
+    if (!lines.length) return [];
+    const headers = lines[0].split(',').map((h) => h.trim());
+    return lines.slice(1).map((line) => {
+        const cols = line.split(',').map((x) => x.trim());
+        const obj = {};
+        headers.forEach((h, i) => { obj[h] = cols[i] || ''; });
+        return obj;
+    });
+}
+
+async function loadAll() {
+    const [stationsRes, cladoRes, bouzonWaterRes] = await Promise.all([
+        fetch('data/pontos_mapa.json'),
+        fetch('data/cladograma_hierarquia_publicacao.json'),
+        fetch('../bouzon_2005_parametros_agua.csv')
+    ]);
+    const [stations, tree, bouzonWaterCsv] = await Promise.all([
+        stationsRes.json(),
+        cladoRes.json(),
+        bouzonWaterRes.text()
+    ]);
+    rawStations = (Array.isArray(stations) ? stations : []).map((r) => ({
+        ...r,
+        setor: inferSetor(Number(r.latitude))
+    }));
+    const setorBySigla2005 = new Map(
+        rawStations
+            .filter((r) => Number(r.ano) === 2005)
+            .map((r) => [String(r.sigla || '').split('-')[0], r.setor])
+    );
+    bouzonWater2005 = parseCsv(bouzonWaterCsv).map((r) => ({
+        ...r,
+        pid_um: Number(String(r.pid_um || '0').replace(',', '.')),
+        n_nh4_um: Number(String(r.n_nh4_um || '0').replace(',', '.')),
+        setor: setorBySigla2005.get(String(r.sigla_2005 || '').trim()) || ''
+    }));
+    buildLeafPhylumMap(tree || {});
+}
+
+function wireEvents() {
+    ['fAno', 'fSetor', 'fTopN', 'fTipoTemporal'].forEach((id) => {
+        document.getElementById(id).addEventListener('change', rerender);
+    });
+    document.getElementById('btnReset').addEventListener('click', () => {
+        document.getElementById('fAno').value = 'all';
+        document.getElementById('fSetor').value = 'all';
+        document.getElementById('fTopN').value = '10';
+        document.getElementById('fTipoTemporal').value = 'oficial';
+        rerender();
+    });
+}
+
+function initTheme() {
+    try {
+        const saved = localStorage.getItem('darkMode');
+        if (saved === 'true') document.body.classList.add('dark-mode');
+    } catch (_) {}
+    updateThemeButton();
+}
+
+function updateThemeButton() {
+    const btn = document.getElementById('themeToggle');
+    btn.textContent = document.body.classList.contains('dark-mode') ? '☀️' : '🌙';
+}
+
+function toggleTheme() {
+    document.body.classList.toggle('dark-mode');
+    try { localStorage.setItem('darkMode', document.body.classList.contains('dark-mode')); } catch (_) {}
+    updateThemeButton();
+    rerender();
+}
+
+document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+
+(async function init() {
+    try {
+        initTheme();
+        await loadAll();
+        wireEvents();
+        rerender();
+    } catch (err) {
+        console.error('Falha ao carregar dashboard', err);
+        alert('Falha ao carregar dados do dashboard.');
+    }
+})();
+</script>
+</body>
+</html>
