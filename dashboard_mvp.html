@@ -803,11 +803,25 @@ function parseCsv(text) {
     });
 }
 
+async function fetchFirstAvailable(urls) {
+    for (const url of urls) {
+        try {
+            const res = await fetch(url);
+            if (res.ok) return res;
+        } catch (_) {}
+    }
+    throw new Error(`Nenhuma fonte disponível: ${urls.join(', ')}`);
+}
+
 async function loadAll() {
     const [stationsRes, cladoRes, bouzonWaterRes] = await Promise.all([
-        fetch('data/pontos_mapa.json'),
-        fetch('data/cladograma_hierarquia_publicacao.json'),
-        fetch('../bouzon_2005_parametros_agua.csv')
+        fetchFirstAvailable(['data/pontos_mapa.json']),
+        fetchFirstAvailable(['data/cladograma_hierarquia_publicacao.json']),
+        fetchFirstAvailable([
+            'bouzon_2005_parametros_agua.csv',
+            'data/bouzon_2005_parametros_agua.csv',
+            '../bouzon_2005_parametros_agua.csv'
+        ])
     ]);
     const [stations, tree, bouzonWaterCsv] = await Promise.all([
         stationsRes.json(),
