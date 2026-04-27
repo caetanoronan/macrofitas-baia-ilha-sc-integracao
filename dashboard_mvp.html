@@ -354,6 +354,13 @@
             <canvas id="chartBouzonWater"></canvas>
             <p class="note">Leitura: barras azuis mostram N-NH4 (µM) no eixo esquerdo e a linha amarela mostra PID (µM) no eixo direito. O N-NH4 funciona como indicador de aporte nitrogenado dissolvido e tende a aumentar em áreas sob maior influência de esgoto/urbanização. O PID indica disponibilidade de fósforo inorgânico dissolvido; sua interpretação deve ser conjunta com N-NH4, setorização e contexto hidrodinâmico de cada estação.</p>
         </article>
+
+        <article class="panel full">
+            <h2>Biomassa e Riqueza - Bouzon (2005)</h2>
+            <p class="meta">Biomassa média (g/m²) e riqueza (táxons) por estação de 2005.</p>
+            <canvas id="chartBiomass2005"></canvas>
+            <p class="note">Leitura: barras representam biomassa média (g/m²) e a linha representa riqueza. A combinação ajuda a identificar estações com alta biomassa, mas baixa riqueza (ou o inverso), refinando a interpretação ecológica para a defesa.</p>
+        </article>
     </section>
 
     <section class="legend-stations">
@@ -363,6 +370,7 @@
         <div class="station-grid">
             <div><b>N-NH4 (µM)</b> → nitrogênio amoniacal dissolvido.</div>
             <div><b>PID (µM)</b> → fósforo inorgânico dissolvido.</div>
+            <div><b>Biomassa (g/m²)</b> → massa média do fitobentos por área.</div>
             <div><b>E. coli (NMP/100 ml)</b> → indicador microbiológico de qualidade da água.</div>
             <div><b>P</b> → balneabilidade própria.</div>
             <div><b>I</b> → balneabilidade imprópria.</div>
@@ -756,6 +764,79 @@ function renderBouzonWaterChart(filters) {
     });
 }
 
+function renderBiomass2005Chart(filters) {
+    let rows = rawStations
+        .filter((r) => Number(r.ano) === 2005)
+        .map((r) => ({
+            ...r,
+            bio: Number(r.biomassa_media_gm2 || r.biomassa_gm2 || 0),
+            riq: Number(r.riqueza_taxons || 0)
+        }))
+        .filter((r) => Number.isFinite(r.bio) && r.bio > 0);
+
+    if (filters.setor !== 'all') rows = rows.filter((r) => r.setor === filters.setor);
+    if (filters.ano === '2012') rows = [];
+
+    rows.sort((a, b) => b.bio - a.bio);
+    const topRows = rows.slice(0, Math.min(filters.topN || 10, rows.length || 10));
+
+    const labels = topRows.length ? topRows.map((r) => String(r.sigla || '').replace('-2005', '')) : ['Sem dados para o filtro'];
+    const bioVals = topRows.length ? topRows.map((r) => r.bio) : [0];
+    const riqVals = topRows.length ? topRows.map((r) => r.riq) : [0];
+
+    destroyChart('biomass2005');
+    charts.biomass2005 = new Chart(document.getElementById('chartBiomass2005'), {
+        data: {
+            labels,
+            datasets: [
+                {
+                    type: 'bar',
+                    label: 'Biomassa (g/m²)',
+                    data: bioVals,
+                    yAxisID: 'yBio',
+                    backgroundColor: '#2a9d8f'
+                },
+                {
+                    type: 'line',
+                    label: 'Riqueza (táxons)',
+                    data: riqVals,
+                    yAxisID: 'yRiq',
+                    borderColor: '#0066cc',
+                    backgroundColor: '#0066cc',
+                    tension: 0.25,
+                    pointRadius: 4,
+                    pointHoverRadius: 5
+                }
+            ]
+        },
+        options: {
+            ...commonChartOptions(true),
+            scales: {
+                x: {
+                    ticks: { color: chartThemeOptions().tickColor },
+                    grid: { color: chartThemeOptions().gridColor }
+                },
+                yBio: {
+                    type: 'linear',
+                    position: 'left',
+                    beginAtZero: true,
+                    ticks: { color: chartThemeOptions().tickColor },
+                    grid: { color: chartThemeOptions().gridColor },
+                    title: { display: true, text: 'Biomassa (g/m²)', color: chartThemeOptions().labelColor }
+                },
+                yRiq: {
+                    type: 'linear',
+                    position: 'right',
+                    beginAtZero: true,
+                    ticks: { color: chartThemeOptions().tickColor },
+                    grid: { drawOnChartArea: false },
+                    title: { display: true, text: 'Riqueza (táxons)', color: chartThemeOptions().labelColor }
+                }
+            }
+        }
+    });
+}
+
 function renderKpis(rows) {
     const n = rows.length;
     const richness = rows.map((r) => Number(r.riqueza_taxons || 0));
@@ -788,6 +869,7 @@ function rerender() {
     renderIntersectionChart(rawStations);
     renderWaterChart(filters);
     renderBouzonWaterChart(filters);
+    renderBiomass2005Chart(filters);
     renderStationLegend(rawStations);
 }
 
